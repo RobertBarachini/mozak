@@ -1,0 +1,12 @@
+# Link-integrity gate: the graph must have no broken wikilinks and no duplicate
+# stems on every push/PR. Same command as the local definition of done (AGENTS.md
+# rule 7). Instances inherit this via the template merge and get the same gate on
+# their own remotes.
+name: check
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/graph.py check

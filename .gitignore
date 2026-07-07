@@ -1,0 +1,27 @@
+# Viewer/app state is not knowledge — keep the repo program-agnostic
+.obsidian/
+/logseq/
+.trash/
+
+# Derived artifacts — never committed. links.json: the mechanical index,
+# rebuilt by `graph.py check` after edits (rule 7), pulls (SYNC ritual), and
+# clones (SETUP smoke test). presentations/<yyyy-mm-dd>-<slug>/: agent-rendered
+# outputs (reports, HTML, PDF) — disposable renderings of the graph; external
+# backups cover keepers, and insights are distilled back into pages/ first.
+_generated/
+
+# Dump-zone contents — transient by contract (drained on ingestion) and may
+# hold huge binary blobs; disk backups cover the window until ingestion.
+# Only the contract README ships.
+raw/*
+!raw/README.md
+
+# Binary store — durable but never in git (binaries don't diff or merge, only
+# bloat append-only history; disk backups are their durability). Git tracks
+# text; textual verbatim originals live tracked in archive/ instead.
+assets/*
+!assets/README.md
+
+# OS junk
+.DS_Store
+Thumbs.db
