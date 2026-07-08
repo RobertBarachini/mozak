@@ -4,7 +4,7 @@ type: note
 domain: [meta]
 tags: [workflow]
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-09
 status: growing
 ---
 
@@ -53,7 +53,9 @@ pages, PDFs, slide decks — go to `_generated/presentations/<yyyy-mm-dd>-<slug>
 graph primary: any **new** synthesis produced while rendering is distilled back
 into `pages/` — a render is never an insight's only home — and every render
 leaves a journal line naming the notes it drew on, so provenance survives the
-render's disposal.
+render's disposal. A render stays **local** to that folder (or a location the user
+explicitly names); publishing it outward — to Claude/Anthropic Artifacts or any external
+host — requires the user's explicit authorization (AGENTS rule 10).
 
 ## Boundary with project repos
 

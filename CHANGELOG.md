@@ -34,6 +34,12 @@ Newest first.
 - **Gitignore Python bytecode** (`__pycache__/`, `*.pyc`): surfaced by the guard's own
   test — `graph.py` is now importable, so caches must never be committed and would
   otherwise trip the ownership guard as stray files under `tools/`.
+- **New MUST rule 10 — never publish outward without authorization.** Renders
+  (presentations, reports, HTML/PDF, slide decks) stay in `_generated/` or a location the
+  user explicitly names; the agent must not push them, or any repo content, to
+  Claude/Anthropic Artifacts or any other external destination without the user's
+  explicit per-request authorization. `pages/research-flow.md` ("Synthesizing outward")
+  points to it.
 
 ## 2026-07-08
 

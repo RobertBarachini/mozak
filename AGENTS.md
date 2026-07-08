@@ -110,6 +110,14 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    the moment the next item lands); prefer deleting a copy over maintaining one.
    This is [pages/claim-level-provenance.md](pages/claim-level-provenance.md)
    applied to the system's own rules.
+10. **Never publish outward without explicit authorization.** Renders — presentations,
+   reports, HTML/PDF, slide decks — are LOCAL artifacts: they belong in `_generated/`
+   (per its layout row) or a location the user explicitly names, nowhere else. The agent
+   MUST NOT send them, or any repo content, to Claude/Anthropic Artifacts, gists,
+   pastebins, hosted pages, or any other external, outward-facing destination without
+   the user's explicit per-request authorization — publishing exfiltrates private
+   knowledge and can be cached or indexed beyond deletion. Rendering is local by default;
+   sharing is a separate, authorized act.
 
 ## Ingestion workflow (two-pass — never skip the raw layer)
 
