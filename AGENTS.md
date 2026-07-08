@@ -26,6 +26,8 @@ stable.
 | `conventions/` | [frontmatter-schema.md](conventions/frontmatter-schema.md) — extend it BEFORE using new fields/enums. |
 | `tools/` | `graph.py` — check / backlinks / rename / tags. `recipes/` — executable typed transformations with contract headers (catalog: `grep -rA4 "^# recipe:" tools/recipes/`); check there before hand-rolling, promote on second hand-roll (rule of two). Stdlib only. |
 | `_generated/` | Derived artifacts — **all gitignored**, nothing here is source-of-truth. `links.json`: the mechanical index, never hand-edit; `check` rebuilds it after edits (rule 7), pulls (SYNC ritual), and clones (SETUP smoke test). `presentations/<yyyy-mm-dd>-<slug>/`: agent-rendered outputs synthesized FROM the graph (reports, HTML, PDF) — disposable renderings; any new insight they contain is distilled back into `pages/` first (a render is never an insight's only home) and every render leaves a journal line naming its source notes. |
+| `.private/` | Local-only **private zone** — the user's own notes and files. **Hard rule: the agent never reads, opens, or greps anything here unless the user explicitly approves access for that request** (it holds material the user chose to withhold from the agent). Fully gitignored — never tracked, never in history; ships no in-dir README, keeping the never-read rule absolute. |
+| `.personal-shared/` | Local-only **personal context** the agent MAY read and use — personal facts (name, measurements, preferences) that make answers concrete — but MUST NOT commit or otherwise push into git history. Fully gitignored. The complement to `.private/`: shared with the agent, withheld from git. |
 
 ## Authoring rules (MUST)
 

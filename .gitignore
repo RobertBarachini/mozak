@@ -22,6 +22,15 @@ raw/*
 assets/*
 !assets/README.md
 
+# Local-only privacy zones — the whole directory is ignored (no in-dir README:
+# a privacy zone ships nothing to git, and it keeps `.private`'s never-read rule
+# absolute). Contract lives in AGENTS.md's Layout table. `.private/`: the user's
+# own notes — the agent must NOT read it without explicit user approval.
+# `.personal-shared/`: personal facts (measurements, etc.) the agent MAY read and
+# use but MUST NOT commit — usable context that stays out of history.
+.private/
+.personal-shared/
+
 # OS junk
 .DS_Store
 Thumbs.db
