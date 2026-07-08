@@ -30,7 +30,7 @@ write your instance's first journal entry.
 |---|---|
 | Humans | [pages/start-here.md](pages/start-here.md) — the root map of content |
 | Agents | [AGENTS.md](AGENTS.md) — the constitution (Claude Code loads it via [CLAUDE.md](CLAUDE.md)) |
-| Ops | [SETUP.md](SETUP.md) · [SYNC.md](SYNC.md) |
+| Ops | [SETUP.md](SETUP.md) · [SYNC.md](SYNC.md) · [CHANGELOG.md](CHANGELOG.md) |
 | Why it's shaped this way | the meta pages: design rationale, lineage, research flow |
 
 Designed 2026-07 from an adversarially-verified deep-research run over the

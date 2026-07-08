@@ -72,5 +72,6 @@ yt-dlp --skip-download --write-auto-subs --sub-format vtt \
 
 ## 7. Definition of done (every writing session)
 
-`python3 tools/graph.py check` exits 0 → journal entry → draft commit message →
+`python3 tools/graph.py check` exits 0 → log the change (a `journals/` entry, or `CHANGELOG.md` for template-system
+changes — AGENTS rule 7) → draft commit message →
 human commits. Never push without being asked.

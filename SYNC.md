@@ -10,9 +10,9 @@ Agents never push in either repo; humans review drafted commits and push.
 
 | Class | Paths | Merge-conflict resolution |
 |---|---|---|
-| **Template-owned** | `tools/` (except `tools/recipes/local/` — instance-owned, never shipped, never auto-upstreamed), `templates/`, `CLAUDE.md`, `.gitignore`, `.github/`, `LICENSE` | Take template's side. Instances don't edit these; a needed change is made in the template (or upstreamed first). |
+| **Template-owned** | `tools/` (except `tools/recipes/local/` — instance-owned, never shipped, never auto-upstreamed), `templates/`, `CLAUDE.md`, `.gitignore`, `.github/`, `LICENSE`, `CHANGELOG.md` | Take template's side. Instances don't edit these; a needed change is made in the template (or upstreamed first). |
 | **Shared-evolving** | `AGENTS.md`, `SYNC.md`, `conventions/frontmatter-schema.md`, `SETUP.md` (body), and the **bodies** of every meta-domain page the template ships (the rule is generic — any `pages/*.md` present in the template is shared; the template's `pages/` listing IS the roster, per AGENTS rule 9 no copy of it is maintained here) | Merge by intent: system-generic content follows the template; instance-specific lines stay. Any generalizable improvement made instance-side MUST be upstreamed (see ritual below) — otherwise the repos drift apart permanently. |
-| **Instance-owned** | All other `pages/`, `journals/`, `sources/` (except its README and the template-shipped founding-research capture — the public evidence core behind the design's claims), `raw/` and `assets/` contents (both gitignored; the template ships only their READMEs), `archive/` content (except its README), `README.md`, plus two designated zones inside shared pages: the `## Domains` list in `start-here` and the `## Sources` sections of meta pages | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
+| **Instance-owned** | All other `pages/`, `journals/`, `sources/` (except its README and the template-shipped founding-research capture — the public evidence core behind the design's claims), `raw/`, `assets/`, `.private/`, and `.personal-shared/` contents (all gitignored; the template ships only their READMEs / `.gitkeep` markers), `archive/` content (except its README), `README.md`, plus two designated zones inside shared pages: the `## Domains` list in `start-here` and the `## Sources` sections of meta pages | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
 
 **Privacy boundary (hard rule):** the template is public — instance content, personal
 facts, and instance-specific references never flow upstream. Generalize before
@@ -30,7 +30,8 @@ upstreaming: strip names, dates-of-use, domain content, founding-capture wikilin
 - `start-here` `## Domains` — empty-but-for-meta in the template; grows in instances.
 - Instances have `journals/*.md`, their own `sources/*.md`, `archive/` content
   (e.g. a founding archive); the template ships only the directory READMEs, the
-  `journals/.gitkeep`, and the founding-research capture (public evidence core).
+  `journals/.gitkeep`, the `.private/` and `.personal-shared/` `.gitkeep` markers,
+  and the founding-research capture (public evidence core).
 
 ## Rituals
 
