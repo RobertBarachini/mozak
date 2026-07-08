@@ -9,6 +9,7 @@ Usage:
   python3 tools/graph.py backlinks <stem>     # who links to <stem>, with context lines
   python3 tools/graph.py rename <old> <new>   # rename a note + rewrite all references
   python3 tools/graph.py tags [tag]           # all frontmatter tags, or notes carrying one
+  python3 tools/graph.py ownership            # in an instance: flag locally-authored template-owned files
 
 Notes are the .md files under pages/, journals/, sources/ (README.md excluded).
 A wikilink target is a note's filename stem; stems must be unique repo-wide.
@@ -18,6 +19,7 @@ Known limitation: wikilinks inside fenced code blocks are counted like any other
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -134,7 +136,12 @@ def cmd_check(root: Path) -> int:
     for o in orphans:
         print(f"  orphan (no links in or out): {notes[o]['path']}")
     print("index: _generated/links.json")
-    return 1 if (broken or dupes) else 0
+    rc = 1 if (broken or dupes) else 0
+    try:                       # advisory ownership guard (rule 7 bracket); never wedges check
+        cmd_ownership(root, strict=False, verbose=False)
+    except Exception:
+        pass
+    return rc
 
 
 def cmd_backlinks(root: Path, stem: str) -> int:
@@ -176,6 +183,99 @@ def cmd_rename(root: Path, old: str, new: str) -> int:
     return 0
 
 
+def _git(root: Path, *args):
+    """Run git in `root`; return stdout str, or None on any failure (git missing, not a
+    repo, non-zero exit). Ownership degrades to a no-op rather than erroring."""
+    try:
+        r = subprocess.run(["git", "-C", str(root), *args],
+                           capture_output=True, text=True)
+    except (OSError, ValueError):
+        return None
+    return r.stdout if r.returncode == 0 else None
+
+
+def _cell_globs(cell: str):
+    """(owned, excluded) path globs from one Ownership-table cell: every `backticked`
+    token, trailing slash stripped; a token inside an `except ( … )` span is excluded."""
+    spans = []
+    for m in re.finditer(r"except", cell):
+        close = cell.find(")", m.end())
+        spans.append((m.end(), close if close != -1 else len(cell)))
+    owned, excl = [], []
+    for m in re.finditer(r"`([^`]+)`", cell):
+        tok = m.group(1).strip().rstrip("/")
+        (excl if any(a <= m.start() < b for a, b in spans) else owned).append(tok)
+    return owned, excl
+
+
+def parse_ownership(root: Path):
+    """Template-owned + shared-evolving path sets, parsed from SYNC.md's Ownership table
+    — the ONE normative home (AGENTS rule 9); never hardcode the list here."""
+    owned, excludes, shared = [], [], []
+    for line in (root / "SYNC.md").read_text(encoding="utf-8").splitlines():
+        if line.startswith("| **Template-owned**"):
+            owned, excludes = _cell_globs(line.split("|")[2])
+        elif line.startswith("| **Shared-evolving**"):
+            shared = [t for t in _cell_globs(line.split("|")[2])[0]
+                      if t.endswith(".md") and "*" not in t]
+    return owned, excludes, shared
+
+
+def cmd_ownership(root: Path, strict=False, template_ref="template/main",
+                  verbose=True, upstream_reminders=False) -> int:
+    """In an INSTANCE (a repo with a `template` remote), flag template-owned files the
+    instance authored locally — a boundary violation (SYNC Ownership table). Detection
+    diffs from the merge-base with the template, so being un-pulled never false-positives.
+    No-op (exit 0) in the template repo, or when no template baseline is available."""
+    remotes = _git(root, "remote")
+    if remotes is None:
+        if verbose:
+            print("ownership: git unavailable — skipping")
+        return 0
+    if "template" not in remotes.split():
+        if verbose:
+            print("ownership: not an instance (no `template` remote) — skipping")
+        return 0
+
+    owned, excludes, shared = parse_ownership(root)
+    if not owned:                       # fail loud: a reworded table must not pass silently
+        print("ownership: parsed 0 template-owned paths from SYNC.md — Ownership table "
+              "format changed?")
+        return 1 if strict else 0
+
+    mb = _git(root, "merge-base", "HEAD", template_ref)
+    if mb is None and template_ref == "template/main":
+        mb = _git(root, "merge-base", "HEAD", "template/HEAD")
+    if mb is None:
+        if verbose:
+            print(f"ownership: no merge-base with {template_ref} — run "
+                  "`git fetch template`. Skipping.")
+        return 0
+    mb = mb.strip()
+
+    def changed(spec, *diffargs):
+        out = _git(root, "diff", "--name-only", *diffargs, "--", *spec)
+        return set(out.split()) if out else set()
+
+    pathspec = owned + [f":(exclude){e}" for e in excludes]
+    violations = sorted(changed(pathspec, mb, "HEAD") | changed(pathspec, "HEAD"))
+
+    if violations or verbose:
+        print(f"ownership: {len(violations)} template-owned file(s) authored locally")
+    for v in violations:
+        print(f"  OWNED-EDIT {v}")
+    if violations:
+        url = (_git(root, "remote", "get-url", "template") or "template").strip()
+        print(f"  → route upstream (do NOT edit here): make the change in the template "
+              f"checkout ({url}), generalized; the human commits + pushes; then "
+              "`git merge template/main` here. See SYNC 'Instance upstreams an improvement'.")
+    if upstream_reminders and shared:
+        for s in sorted(changed(shared, mb, "HEAD") | changed(shared, "HEAD")):
+            print(f"  shared-evolving changed (upstream any generic improvement): {s}")
+
+    return 1 if (violations and strict) else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent,
@@ -189,6 +289,10 @@ def main() -> int:
     p_ren.add_argument("new")
     p_tags = sub.add_parser("tags")
     p_tags.add_argument("tag", nargs="?", default=None)
+    p_own = sub.add_parser("ownership")
+    p_own.add_argument("--strict", action="store_true")
+    p_own.add_argument("--template-ref", default="template/main")
+    p_own.add_argument("--upstream-reminders", action="store_true")
     args = ap.parse_args()
     if args.cmd == "check":
         return cmd_check(args.root)
@@ -196,6 +300,10 @@ def main() -> int:
         return cmd_backlinks(args.root, args.stem)
     if args.cmd == "tags":
         return cmd_tags(args.root, args.tag)
+    if args.cmd == "ownership":
+        return cmd_ownership(args.root, strict=args.strict,
+                             template_ref=args.template_ref,
+                             upstream_reminders=args.upstream_reminders)
     return cmd_rename(args.root, args.old, args.new)
 
 

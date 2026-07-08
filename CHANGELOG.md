@@ -14,6 +14,27 @@ in its own journal.
 
 Newest first.
 
+## 2026-07-09
+
+- **Ownership guard — `graph.py ownership` enforces the template-owned boundary.** New
+  subcommand that, in an instance (a repo with a `template` remote), flags any
+  template-owned file (SYNC Ownership table) the instance authored locally — detected via
+  `git diff` from the merge-base with `template/main`, so being un-pulled never
+  false-positives, and birth divergences (`SETUP.md`, `README.md`) are structurally out
+  of scope since they aren't template-owned. No-op in the template itself. Surfaces:
+  - **advisory** inside the rule-7 `check` bracket (never changes `check`'s exit code);
+  - **opt-in hard gate** via a shipped `tools/hooks/pre-commit`
+    (`git config core.hooksPath tools/hooks` — SETUP);
+  - an **AGENTS rule-7 clause**: in an instance, route generalizable improvements upstream
+    (SYNC *Instance upstreams an improvement*), never author template-owned files locally.
+  The template-owned path set is **parsed from the SYNC.md Ownership table** — the one
+  normative home (rule 9), no duplicate manifest — failing loud if the parse yields zero
+  paths. CI stays link-check only (a bare checkout has no `template` remote); the
+  ownership-in-CI recipe is documented, not wired.
+- **Gitignore Python bytecode** (`__pycache__/`, `*.pyc`): surfaced by the guard's own
+  test — `graph.py` is now importable, so caches must never be committed and would
+  otherwise trip the ownership guard as stray files under `tools/`.
+
 ## 2026-07-08
 
 - **Local-only privacy zones: `.private/` and `.personal-shared/`.** Two zones whose

@@ -34,6 +34,11 @@ assets/*
 .personal-shared/*
 !.personal-shared/.gitkeep
 
+# Python bytecode — graph.py is importable (the ownership parser), so caches must never
+# be committed; stray .pyc under tools/ would also trip the ownership guard.
+__pycache__/
+*.pyc
+
 # OS junk
 .DS_Store
 Thumbs.db

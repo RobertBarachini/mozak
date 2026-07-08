@@ -14,6 +14,10 @@ Agents never push in either repo; humans review drafted commits and push.
 | **Shared-evolving** | `AGENTS.md`, `SYNC.md`, `conventions/frontmatter-schema.md`, `SETUP.md` (body), and the **bodies** of every meta-domain page the template ships (the rule is generic — any `pages/*.md` present in the template is shared; the template's `pages/` listing IS the roster, per AGENTS rule 9 no copy of it is maintained here) | Merge by intent: system-generic content follows the template; instance-specific lines stay. Any generalizable improvement made instance-side MUST be upstreamed (see ritual below) — otherwise the repos drift apart permanently. |
 | **Instance-owned** | All other `pages/`, `journals/`, `sources/` (except its README and the template-shipped founding-research capture — the public evidence core behind the design's claims), `raw/`, `assets/`, `.private/`, and `.personal-shared/` contents (all gitignored; the template ships only their READMEs / `.gitkeep` markers), `archive/` content (except its README), `README.md`, plus two designated zones inside shared pages: the `## Domains` list in `start-here` and the `## Sources` sections of meta pages | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
 
+**Enforced by** `python3 tools/graph.py ownership`: advisory in the rule-7 `check`
+bracket, opt-in pre-commit hard gate (SETUP). An *instance* is any repo with a
+`template` remote; the guard is a no-op in the template itself.
+
 **Gitignored ⇒ instance-local.** A path either side git-ignores is never synced in
 either direction, so the template can neither ship nor overwrite it — yet it stays
 visible in the working tree. "User-visible but never touched by upstream" therefore
@@ -75,6 +79,9 @@ python3 tools/graph.py check         # must exit 0 before finishing
   a knowledge repo is expensive to unpick. When unsure: abort, read more, remerge.
 
 ### Instance upstreams an improvement
+
+The `ownership` guard (advisory in `check`, hard in the opt-in hook) is what surfaces the
+need for this ritual — it flags a template-owned file authored in an instance.
 
 1. Identify the generalizable change (schema field, graph.py fix, new AGENTS rule,
    improved meta-page wording).

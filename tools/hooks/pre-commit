@@ -1,0 +1,6 @@
+#!/bin/sh
+# Ownership guard (opt-in). Blocks a commit that authors a template-owned file in an
+# instance — the boundary defined in SYNC.md. Enable once per clone:
+#   git config core.hooksPath tools/hooks      (see SETUP.md)
+# Bypass in a pinch: git commit --no-verify.
+exec python3 "$(git rev-parse --show-toplevel)/tools/graph.py" ownership --strict

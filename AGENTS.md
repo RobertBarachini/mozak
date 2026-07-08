@@ -84,6 +84,11 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    template-owned (the template authors it; instances only read it). Then draft a
    commit message and stop — the human commits (unless they've explicitly opted this
    repo into autonomous commits).
+   In an instance (a repo with a `template` remote) never author a template-owned file
+   (SYNC Ownership table); a generalizable improvement is routed upstream, not edited
+   locally — per SYNC's *Instance upstreams an improvement* ritual. `python3
+   tools/graph.py ownership` flags any local edit (advisory in the bracket above; an
+   opt-in pre-commit hook — SETUP — blocks it).
 8. **Provenance & contradiction discipline.** Load-bearing factual claims carry
    their origin inline — "…claim ([[capture-stem]])" — so backlinks + anchors make
    repair surgical when a source proves partially wrong

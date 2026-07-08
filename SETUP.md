@@ -23,6 +23,13 @@ python3 tools/graph.py backlinks start-here   # who links to the front door
 `check` also materializes the derived index `_generated/links.json` — it is
 gitignored, so fresh clones don't ship it; this step creates it.
 
+Optional — enforce the ownership boundary locally: `git config core.hooksPath tools/hooks`
+installs the shipped pre-commit hook, which blocks a commit that edits a template-owned
+file in this instance (`python3 tools/graph.py ownership`; bypass with `--no-verify`). To
+gate in CI too, add a step that sets up the template remote first — `git remote add
+template <url> && git fetch template && python3 tools/graph.py ownership --strict` — since
+`actions/checkout` doesn't configure it.
+
 ## 3. Make it yours
 
 - Rewrite `README.md` to describe the instance (instance-owned per SYNC.md).
