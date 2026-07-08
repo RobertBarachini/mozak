@@ -32,3 +32,12 @@ Newest first.
   maintenance stay in `journals/`. Before this, rule 7 sent *every* substantive change
   to a journal — which dropped template-development history into the instance-owned
   journal namespace, where it clashed with users' own dated entries on pull.
+- **Made the zone model explicit** (AGENTS Layout preamble + a SYNC "gitignored ⇒
+  instance-local" principle): the repo's folders sort along three independent axes —
+  sync ownership, agent access, and durability — and any gitignored path is
+  user-visible yet untouchable by upstream. Documents an existing guarantee (e.g.
+  `_generated/presentations/`); no new directory.
+- **`check` now brackets a session, not just ends it (AGENTS rule 7):** run
+  `graph.py check` at the *start* of a task too — to refresh or materialize the
+  gitignored `_generated/links.json` before working (notes may have been edited
+  outside a checked session) — not only at done.

@@ -13,6 +13,13 @@ stable.
 
 ## Layout
 
+Each row is a path's contract. Three independent axes run through the table — **sync
+ownership** (can upstream overwrite it? — [SYNC.md](SYNC.md)), **agent access** (no-read
+`.private/` · read-only · read-write), and **durability** (source-of-truth vs.
+disposable). They compose: `_generated/presentations/`, for instance, is
+agent-generated, disposable, and — being gitignored — instance-local, so it stays
+user-visible yet is never shipped or overwritten by upstream (SYNC).
+
 | Path | Role |
 |---|---|
 | `pages/` | Atomic evergreen notes — THE graph. Flat, no subfolders. |
@@ -25,7 +32,7 @@ stable.
 | `templates/` | Copy on note creation; delete the guidance comments. |
 | `conventions/` | [frontmatter-schema.md](conventions/frontmatter-schema.md) — extend it BEFORE using new fields/enums. |
 | `tools/` | `graph.py` — check / backlinks / rename / tags. `recipes/` — executable typed transformations with contract headers (catalog: `grep -rA4 "^# recipe:" tools/recipes/`); check there before hand-rolling, promote on second hand-roll (rule of two). Stdlib only. |
-| `_generated/` | Derived artifacts — **all gitignored**, nothing here is source-of-truth. `links.json`: the mechanical index, never hand-edit; `check` rebuilds it after edits (rule 7), pulls (SYNC ritual), and clones (SETUP smoke test). `presentations/<yyyy-mm-dd>-<slug>/`: agent-rendered outputs synthesized FROM the graph (reports, HTML, PDF) — disposable renderings; any new insight they contain is distilled back into `pages/` first (a render is never an insight's only home) and every render leaves a journal line naming its source notes. |
+| `_generated/` | Derived artifacts — **all gitignored**, nothing here is source-of-truth. `links.json`: the mechanical index, never hand-edit; `check` rebuilds it before and after edits (rule 7), pulls (SYNC ritual), and clones (SETUP smoke test). `presentations/<yyyy-mm-dd>-<slug>/`: agent-rendered outputs synthesized FROM the graph (reports, HTML, PDF) — disposable renderings; any new insight they contain is distilled back into `pages/` first (a render is never an insight's only home) and every render leaves a journal line naming its source notes. |
 | `.private/` | Local-only **private zone** — the user's own notes and files. **Hard rule: the agent never reads, opens, or greps anything here unless the user explicitly approves access for that request** (it holds material the user chose to withhold from the agent). Only an empty `.gitkeep` is tracked (so the zone exists in a fresh clone); every real file is gitignored — never tracked, never in history — and nothing readable ever ships, keeping the never-read rule absolute. |
 | `.personal-shared/` | Local-only **personal context** — personal facts (name, measurements, preferences, locale) that make answers concrete. **Both the user and the agent may view AND edit it**, and the agent reads/uses it freely; it maintains a top-level index of what's stored in `.personal-shared/README.md`, generating that README if absent. But it is **never committed**: only an empty `.gitkeep` is tracked; the README and all content stay local. The complement to `.private/`: shared with the agent, withheld from git. |
 
@@ -64,15 +71,19 @@ stable.
    every reference, then re-run `check`. Prefer adding `aliases:` over renaming.
    Deleting a note: re-point or remove every reference first (a dangling link
    fails `check`), then journal what was deleted and why.
-7. **Definition of done** for any session that changed the repo:
-   `python3 tools/graph.py check` exits 0 (no broken links, no duplicate stems), plus
-   a log entry for substantive changes — routed by kind: **this repo's own work**
-   (notes ingested/distilled/edited, contested-claim episodes, content sweeps, syncs
-   performed) → a `journals/` entry; **changes to the template system itself** (these
-   MUST rules, the schema, `tools/`, `templates/`, root config such as `.gitignore`)
-   → a [CHANGELOG.md](CHANGELOG.md) entry, which is template-owned (the template
-   authors it; instances only read it). Then draft a commit message and stop — the
-   human commits (unless they've explicitly opted this repo into autonomous commits).
+7. **Bracket the session with `check`.** `python3 tools/graph.py check` regenerates the
+   gitignored index `_generated/links.json`, so **run it first**, at the start of a
+   task, to refresh (or materialize) an index that may be stale or absent when edits
+   landed outside a checked session — then work against a current graph. **Definition
+   of done** for any session that changed the repo: `check` exits 0 again (no broken
+   links, no duplicate stems), plus a log entry for substantive changes — routed by
+   kind: **this repo's own work** (notes ingested/distilled/edited, contested-claim
+   episodes, content sweeps, syncs performed) → a `journals/` entry; **changes to the
+   template system itself** (these MUST rules, the schema, `tools/`, `templates/`, root
+   config such as `.gitignore`) → a [CHANGELOG.md](CHANGELOG.md) entry, which is
+   template-owned (the template authors it; instances only read it). Then draft a
+   commit message and stop — the human commits (unless they've explicitly opted this
+   repo into autonomous commits).
 8. **Provenance & contradiction discipline.** Load-bearing factual claims carry
    their origin inline — "…claim ([[capture-stem]])" — so backlinks + anchors make
    repair surgical when a source proves partially wrong
