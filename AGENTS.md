@@ -22,7 +22,7 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
 
 | Path | Role |
 |---|---|
-| `pages/` | Atomic evergreen notes — THE graph. Flat, no subfolders. |
+| `pages/` | Atomic evergreen notes — THE graph. Flat, no subfolders. One namespace, split ownership (SYNC): template-shipped meta pages are template-owned — instances annotate them by linking from their own notes, never by editing bodies; `start-here` and every other page are instance-owned. |
 | `journals/` | `YYYY-MM-DD.md` activity log of **this repo's own work**: what was ingested/distilled/changed in the graph (and maintenance such as syncs performed), and why. Changes to the template system itself log to `CHANGELOG.md` instead — rule 7. |
 | `sources/` | Raw captures (transcripts, articles). Immutable after distillation (append-only exceptions per ingestion step 3). |
 | `raw/` | Anytime dump zone: humans and agents drop unstructured files here with zero ceremony. NOT part of the graph — not link-indexed, no schema, and **contents are gitignored** (may hold huge blobs; transient by contract — disk backups cover the window until ingestion; only the README is tracked). Ingestion drains it (text → a proper `sources/` capture or `archive/`; binaries → `assets/`, the gitignored binary store; then the raw item is removed). Trends toward empty; `sources/` is the durable raw layer. |
@@ -31,7 +31,7 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
 | `README.md`, `SETUP.md`, `SYNC.md`, `CHANGELOG.md` | Root docs: human landing page; bootstrap/ops (viewers, MCP, ingestion toolchain); template↔instance sync contract; template-system development log (rule 7). |
 | `templates/` | Copy on note creation; delete the guidance comments. |
 | `conventions/` | [frontmatter-schema.md](conventions/frontmatter-schema.md) — extend it BEFORE using new fields/enums. |
-| `tools/` | `graph.py` — check / backlinks / rename / tags. `recipes/` — executable typed transformations with contract headers (catalog: `grep -rA4 "^# recipe:" tools/recipes/`); check there before hand-rolling, promote on second hand-roll (rule of two). Stdlib only. |
+| `tools/` | `graph.py` — check / backlinks / rename / tags / domains / ownership. `recipes/` — executable typed transformations with contract headers (catalog: `grep -rA4 "^# recipe:" tools/recipes/`); check there before hand-rolling, promote on second hand-roll (rule of two). Stdlib only. |
 | `_generated/` | Derived artifacts — **all gitignored**, nothing here is source-of-truth. `links.json`: the mechanical index, never hand-edit; `check` rebuilds it before and after edits (rule 7), pulls (SYNC ritual), and clones (SETUP smoke test). `presentations/<yyyy-mm-dd>-<slug>/`: agent-rendered outputs synthesized FROM the graph (reports, HTML, PDF) — disposable renderings; any new insight they contain is distilled back into `pages/` first (a render is never an insight's only home) and every render leaves a journal line naming its source notes. |
 | `.private/` | Local-only **private zone** — the user's own notes and files. **Hard rule: the agent never reads, opens, or greps anything here unless the user explicitly approves access for that request** (it holds material the user chose to withhold from the agent). Only an empty `.gitkeep` is tracked (so the zone exists in a fresh clone); every real file is gitignored — never tracked, never in history — and nothing readable ever ships, keeping the never-read rule absolute. |
 | `.personal-shared/` | Local-only **personal context** — personal facts (name, measurements, preferences, locale) that make answers concrete. **Both the user and the agent may view AND edit it**, and the agent reads/uses it freely; it maintains a top-level index of what's stored in `.personal-shared/README.md`, generating that README if absent. But it is **never committed**: only an empty `.gitkeep` is tracked; the README and all content stay local. The complement to `.private/`: shared with the agent, withheld from git. |
@@ -142,6 +142,8 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
 One graph, many domains (`investing`, `music-metadata`, `meta`, …). Domain membership
 is the frontmatter `domain:` list + a `moc-<domain>.md` hub linked from
 [[start-here]] — never folders. Cross-domain links are encouraged; they're the point.
+The MOC is the curated human layer; the mechanical index is derived, never maintained:
+`python3 tools/graph.py domains` (rule 9 — no list to rot).
 
 ## Viewers
 

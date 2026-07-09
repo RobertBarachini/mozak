@@ -15,7 +15,9 @@ explains why this repo trusts plain text and derived backlinks over any single a
 
 ## Domains
 
-<!-- One line per domain MOC, added as domains are born: a wikilink to
+<!-- This file is a BIRTH SEED — instance-owned from instantiation (SYNC Ownership);
+     template-side edits here reach only future instances.
+     One line per domain MOC, added as domains are born: a wikilink to
      moc-investing, moc-music-metadata, ... plus a clause saying what the domain
      covers. No live link syntax in this comment — graph.py counts links anywhere
      in the file, and the target doesn't exist yet. -->

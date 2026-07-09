@@ -9,7 +9,8 @@ Usage:
   python3 tools/graph.py backlinks <stem>     # who links to <stem>, with context lines
   python3 tools/graph.py rename <old> <new>   # rename a note + rewrite all references
   python3 tools/graph.py tags [tag]           # all frontmatter tags, or notes carrying one
-  python3 tools/graph.py ownership            # in an instance: flag locally-authored template-owned files
+  python3 tools/graph.py domains [domain]     # derived domain index (frontmatter `domain:`), or one domain's notes
+  python3 tools/graph.py ownership            # in an instance: flag locally-authored template-owned files + stem collisions
 
 Notes are the .md files under pages/, journals/, sources/ (README.md excluded).
 A wikilink target is a note's filename stem; stems must be unique repo-wide.
@@ -26,7 +27,9 @@ from pathlib import Path
 WIKILINK = re.compile(r"\[\[([^\]\|#\n]+)(#[^\]\|\n]*)?(\|[^\]\n]*)?\]\]")
 TITLE_RE = re.compile(r"^title:\s*(.+?)\s*$", re.M)
 TAGS_RE = re.compile(r"^tags:\s*\[([^\]]*)\]", re.M)
+DOMAIN_RE = re.compile(r"^domain:\s*\[([^\]]*)\]", re.M)
 NOTE_DIRS = ("pages", "journals", "sources")
+BIRTH_SEEDS = ("pages/start-here.md",)  # template-shipped pages that are instance-owned (SYNC)
 
 
 def md_files(root: Path):
@@ -81,6 +84,36 @@ def cmd_tags(root: Path, tag=None) -> int:
         print("no tags found")
     for t in sorted(index):
         print(f"{t}: {len(index[t])}  —  {', '.join(sorted(index[t]))}")
+    return 0
+
+
+def note_domains(text: str) -> list:
+    """Frontmatter domains (flow-style `domain: [a, b]` only — the schema's form)."""
+    m = DOMAIN_RE.search(text[:600])
+    return [d.strip() for d in m.group(1).split(",") if d.strip()] if m else []
+
+
+def cmd_domains(root: Path, domain=None) -> int:
+    """Derived domain lookup (AGENTS Domains section): frontmatter `domain:` lists are
+    the mechanical index; the MOC is the curated layer. Never a maintained list."""
+    notes, _ = load(root)
+    index = {}
+    for stem, n in notes.items():
+        for d in note_domains(n["text"]):
+            index.setdefault(d, []).append(stem)
+    if domain is not None:
+        stems = sorted(index.get(domain, []))
+        if not stems:
+            print(f"no notes in domain '{domain}'")
+        for s in stems:
+            print(f"{notes[s]['path']}  ({notes[s]['title']})")
+        return 0
+    if not index:
+        print("no domains found")
+    for d in sorted(index):
+        moc = f"moc-{d}"
+        hub = notes[moc]["path"] if moc in notes else "NO MOC (create moc-%s + link from start-here)" % d
+        print(f"{d}: {len(index[d])} notes  —  hub: {hub}")
     return 0
 
 
@@ -224,8 +257,13 @@ def parse_ownership(root: Path):
 def cmd_ownership(root: Path, strict=False, template_ref="template/main",
                   verbose=True, upstream_reminders=False) -> int:
     """In an INSTANCE (a repo with a `template` remote), flag template-owned files the
-    instance authored locally — a boundary violation (SYNC Ownership table). Detection
-    diffs from the merge-base with the template, so being un-pulled never false-positives.
+    instance authored locally — a boundary violation (SYNC Ownership table). The
+    template-shipped meta pages are covered via a dynamic roster (ls-tree of the
+    template ref, minus birth seeds). Detection diffs from the merge-base with the
+    template, so being un-pulled never false-positives; content byte-identical to the
+    template ref is a sync receipt, never flagged (a pull-in-progress stays clean).
+    A flagged roster page absent at the merge-base is reported as STEM-COLLISION
+    (rename the local note before merging) rather than OWNED-EDIT.
     No-op (exit 0) in the template repo, or when no template baseline is available."""
     remotes = _git(root, "remote")
     if remotes is None:
@@ -245,7 +283,8 @@ def cmd_ownership(root: Path, strict=False, template_ref="template/main",
 
     mb = _git(root, "merge-base", "HEAD", template_ref)
     if mb is None and template_ref == "template/main":
-        mb = _git(root, "merge-base", "HEAD", "template/HEAD")
+        template_ref = "template/HEAD"          # propagate: roster + receipt diffs below
+        mb = _git(root, "merge-base", "HEAD", template_ref)
     if mb is None:
         if verbose:
             print(f"ownership: no merge-base with {template_ref} — run "
@@ -254,23 +293,51 @@ def cmd_ownership(root: Path, strict=False, template_ref="template/main",
     mb = mb.strip()
 
     def changed(spec, *diffargs):
+        """File set from `git diff --name-only`; None on git failure (≠ empty diff)."""
         out = _git(root, "diff", "--name-only", *diffargs, "--", *spec)
-        return set(out.split()) if out else set()
+        return None if out is None else set(out.split())
 
-    pathspec = owned + [f":(exclude){e}" for e in excludes]
-    violations = sorted(changed(pathspec, mb, "HEAD") | changed(pathspec, "HEAD"))
+    # The meta-page roster is dynamic — the template's own pages/ listing (SYNC
+    # Ownership: that listing IS the roster; birth seeds are instance-owned).
+    ls = _git(root, "ls-tree", "--name-only", template_ref, "pages/")
+    meta_pages = [p for p in (ls.split("\n") if ls else []) if p and p not in BIRTH_SEEDS]
 
-    if violations or verbose:
-        print(f"ownership: {len(violations)} template-owned file(s) authored locally")
+    pathspec = owned + meta_pages + [f":(exclude){e}" for e in excludes]
+    candidates = (changed(pathspec, mb, "HEAD") or set()) | (changed(pathspec, "HEAD") or set())
+    # Sync receipts are not authorship: drop anything byte-identical to the template's
+    # content (this keeps a pull-in-progress clean even with the pre-commit hook on).
+    # A FAILED receipt diff must skip the filter, never blank the candidate set.
+    receipt_diff = changed(pathspec, template_ref)
+    if receipt_diff is not None:
+        candidates &= receipt_diff
+    elif verbose:
+        print(f"ownership: cannot diff against {template_ref} — receipt filter skipped")
+
+    def in_tree(ref, path):
+        return _git(root, "cat-file", "-e", f"{ref}:{path}") is not None
+
+    # A flagged meta page the merge-base never had is a STEM COLLISION (the instance
+    # coined the stem before the template shipped it), not an edit of a template page.
+    collisions = sorted(c for c in candidates
+                        if c in meta_pages and not in_tree(mb, c) and (root / c).exists())
+    violations = sorted(candidates - set(collisions))
+
+    if violations or collisions or verbose:
+        print(f"ownership: {len(violations)} template-owned file(s) authored locally"
+              + (f", {len(collisions)} stem collision(s)" if collisions else ""))
     for v in violations:
         print(f"  OWNED-EDIT {v}")
+    for c in collisions:
+        print(f"  STEM-COLLISION {c} — the template ships this stem; rename the local "
+              f"note first (`python3 tools/graph.py rename {Path(c).stem} <new-stem>`), "
+              "then merge. The template owns its stems.")
     if violations:
         url = (_git(root, "remote", "get-url", "template") or "template").strip()
         print(f"  → route upstream (do NOT edit here): make the change in the template "
               f"checkout ({url}), generalized; the human commits + pushes; then "
               "`git merge template/main` here. See SYNC 'Instance upstreams an improvement'.")
     if upstream_reminders and shared:
-        for s in sorted(changed(shared, mb, "HEAD") | changed(shared, "HEAD")):
+        for s in sorted((changed(shared, mb, "HEAD") or set()) | (changed(shared, "HEAD") or set())):
             print(f"  shared-evolving changed (upstream any generic improvement): {s}")
 
     return 1 if (violations and strict) else 0
@@ -289,6 +356,8 @@ def main() -> int:
     p_ren.add_argument("new")
     p_tags = sub.add_parser("tags")
     p_tags.add_argument("tag", nargs="?", default=None)
+    p_dom = sub.add_parser("domains")
+    p_dom.add_argument("domain", nargs="?", default=None)
     p_own = sub.add_parser("ownership")
     p_own.add_argument("--strict", action="store_true")
     p_own.add_argument("--template-ref", default="template/main")
@@ -300,6 +369,8 @@ def main() -> int:
         return cmd_backlinks(args.root, args.stem)
     if args.cmd == "tags":
         return cmd_tags(args.root, args.tag)
+    if args.cmd == "domains":
+        return cmd_domains(args.root, args.domain)
     if args.cmd == "ownership":
         return cmd_ownership(args.root, strict=args.strict,
                              template_ref=args.template_ref,

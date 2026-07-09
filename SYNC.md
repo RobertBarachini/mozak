@@ -10,13 +10,23 @@ Agents never push in either repo; humans review drafted commits and push.
 
 | Class | Paths | Merge-conflict resolution |
 |---|---|---|
-| **Template-owned** | `tools/` (except `tools/recipes/local/` — instance-owned, never shipped, never auto-upstreamed), `templates/`, `CLAUDE.md`, `.gitignore`, `.github/`, `LICENSE`, `CHANGELOG.md` | Take template's side. Instances don't edit these; a needed change is made in the template (or upstreamed first). |
-| **Shared-evolving** | `AGENTS.md`, `SYNC.md`, `conventions/frontmatter-schema.md`, `SETUP.md` (body), and the **bodies** of every meta-domain page the template ships (the rule is generic — any `pages/*.md` present in the template is shared; the template's `pages/` listing IS the roster, per AGENTS rule 9 no copy of it is maintained here) | Merge by intent: system-generic content follows the template; instance-specific lines stay. Any generalizable improvement made instance-side MUST be upstreamed (see ritual below) — otherwise the repos drift apart permanently. |
-| **Instance-owned** | All other `pages/`, `journals/`, `sources/` (except its README and the template-shipped founding-research capture — the public evidence core behind the design's claims), `raw/`, `assets/`, `.private/`, and `.personal-shared/` contents (all gitignored; the template ships only their READMEs / `.gitkeep` markers), `archive/` content (except its README), `README.md`, plus two designated zones inside shared pages: the `## Domains` list in `start-here` and the `## Sources` sections of meta pages | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
+| **Template-owned** | `tools/` (except `tools/recipes/local/` — instance-owned, never shipped, never auto-upstreamed), `templates/`, `CLAUDE.md`, `.gitignore`, `.github/`, `LICENSE`, `CHANGELOG.md`, and the **meta pages** — every pages/*.md the template ships (the template's own pages listing IS the roster, per AGENTS rule 9 no copy is maintained here; the ownership guard resolves it dynamically from the template remote) except (`pages/start-here.md` — the birth seed, instance-owned below) | Take template's side. Instances don't edit these; a needed change is made in the template (or upstreamed first). Instances annotate a meta page by **linking to it from their own notes** — backlinks are derived, so the connection surfaces without editing the shared body. |
+| **Shared-evolving** | `AGENTS.md`, `SYNC.md`, `conventions/frontmatter-schema.md`, `SETUP.md` (body) | Merge by intent: system-generic content follows the template; instance-specific lines stay. Any generalizable improvement made instance-side MUST be upstreamed (see ritual below) — otherwise the repos drift apart permanently. |
+| **Instance-owned** | All other `pages/` — including `pages/start-here.md`, the instance's front door and domain index: a template-authored **birth seed**, shipped at instantiation and never updated by the template afterwards — `journals/`, `sources/` (except its README and the template-shipped founding-research capture — the public evidence core behind the design's claims), `raw/`, `assets/`, `.private/`, and `.personal-shared/` contents (all gitignored; the template ships only their READMEs / `.gitkeep` markers), `archive/` content (except its README), `README.md` | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
 
 **Enforced by** `python3 tools/graph.py ownership`: advisory in the rule-7 `check`
 bracket, opt-in pre-commit hard gate (SETUP). An *instance* is any repo with a
-`template` remote; the guard is a no-op in the template itself.
+`template` remote; the guard is a no-op in the template itself. A file whose working
+content is byte-identical to the template's is never flagged (it is a sync receipt,
+not local authorship — so a pull-in-progress stays clean even with the hook on).
+
+**Stem collisions.** All wikilink stems share one namespace, so a template release can
+ship a new meta page whose stem an instance already used. After `git fetch template`
+the ownership guard reports such files as STEM-COLLISION (present in the template
+roster, absent at the merge-base): rename the instance note first —
+`python3 tools/graph.py rename <stem> <new-stem>` — then merge; the template owns its
+stems. Mechanical domain lookup is likewise derivable, never maintained:
+`python3 tools/graph.py domains`.
 
 **Gitignored ⇒ instance-local.** A path either side git-ignores is never synced in
 either direction, so the template can neither ship nor overwrite it — yet it stays
@@ -34,11 +44,10 @@ upstreaming: strip names, dates-of-use, domain content, founding-capture wikilin
 - `README.md` — template describes the system; an instance describes itself.
 - `SETUP.md` — template opens with bootstrap-from-template; an instance opens with
   its own provenance note.
-- Meta pages' `## Sources` — identical by default: both sides cite the
-  template-shipped founding-research capture (the public evidence core, so every
-  instance can dereference the design's citations). The zones stay instance-owned
-  — instances may add links to their own captures.
-- `start-here` `## Domains` — empty-but-for-meta in the template; grows in instances.
+- `start-here.md` — a **birth seed**: the template ships the empty front door, then
+  never updates an instance's copy again (template-side edits reach only future
+  instances). The instance owns it outright — its `## Domains` index grows there.
+  On a pull, any conflict here resolves keep-ours, wholesale.
 - Instances have `journals/*.md`, their own `sources/*.md`, `archive/` content
   (e.g. a founding archive); the template ships only the directory READMEs, the
   `journals/.gitkeep`, the `.private/` and `.personal-shared/` `.gitkeep` markers,
@@ -64,7 +73,7 @@ python3 tools/graph.py check         # must exit 0 before finishing
 
 - **Inspect, then merge — never blind-automerge.** A clean git merge is not
   evidence of semantic correctness: git flags only line collisions, while the
-  dangerous changes (a renamed rule a kept zone still references, a schema change
+  dangerous changes (a renamed rule a kept instance line still references, a schema change
   existing notes violate) merge silently. Read the incoming diff of every
   shared-evolving file even when git reports no conflict.
 - **A sync is its own commit.** Never mix pulled template changes with content

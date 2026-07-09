@@ -14,6 +14,35 @@ in its own journal.
 
 Newest first.
 
+## 2026-07-09 (later)
+
+- **File-grain ownership replaces the two designated zones** (SYNC Ownership table).
+  `pages/start-here.md` is now a **birth seed** — template-shipped at instantiation,
+  instance-owned outright from then on (the `## Domains` index grows there; template-side
+  edits reach only future instances; conflicts resolve keep-ours). The other
+  template-shipped **meta pages move from shared-evolving to template-owned**: instances
+  never edit their bodies — they annotate by *linking from their own notes*; backlinks
+  are derived, so the connection surfaces without touching the shared file, and the
+  in-file `## Sources` zone is gone. Shared-evolving shrinks to the four contract docs
+  (`AGENTS.md`, `SYNC.md`, schema, `SETUP.md` body). Rationale: zones made ownership
+  section-grained, which no tool can check; file-grain is machine-checkable, and the
+  zones were solving a problem the link graph already solves.
+- **`graph.py ownership` learned the new boundary.** The meta-page roster is resolved
+  dynamically (ls-tree of the template ref, minus birth seeds — no maintained list,
+  rule 9). Content byte-identical to the template ref is a **sync receipt**, never
+  flagged — a pull-in-progress stays clean even with the pre-commit hook installed
+  (fixes the mid-merge false positive an instance reported on 2026-07-09). A flagged
+  roster page absent at the merge-base reports as **STEM-COLLISION** (the instance
+  coined a stem the template now ships): rename the local note, then merge; collisions
+  stay advisory even under `--strict`, since the authoring commit was innocent. Also
+  hardened: the `template/HEAD` fallback now propagates to the roster/receipt diffs,
+  and a failed receipt diff skips the filter loudly instead of blanking the candidate
+  set.
+- **`graph.py domains`** — derived domain lookup: frontmatter `domain:` lists → note
+  count + MOC hub per domain; `domains <name>` lists that domain's notes. The MOC stays
+  the curated layer; the mechanical index is derivable, so no enumeration can rot
+  (rule 9). AGENTS' Domains section and `tools/` row point to it.
+
 ## 2026-07-09
 
 - **Ownership guard — `graph.py ownership` enforces the template-owned boundary.** New
