@@ -29,6 +29,19 @@ Newest first.
   re-run periodically (the file is the queue) — by hand or via a harness loop (e.g. Claude
   Code `/loop`), opt-in and agent-agnostic — so with live-refresh a reader sees
   freshly-flagged passages answered as the agent works.
+- **Auto-drain loop guidance corrected — event, not timer** (`pages/report-annotation-loop.md`
+  Cadence section, rewritten to three autonomy tiers). Field-tested finding: an in-session
+  fixed-interval trigger (cron / `/loop 5m`) **does not fire** in an interactive agent
+  session — there's no between-turn wall-clock scheduler — but an **event/completion wake
+  channel does work** (the same one that reports a finished background task). So the live
+  loop must be driven by a **file-change event**: a persistent watcher on `annotations.md`
+  that **emits only when the `[pending]` count rises** (emit-on-rise — the agent's own drain
+  writes lower the count, so they don't self-retrigger the loop), which wakes the agent to
+  drain, then re-arms. Session-lived by nature (dies with the session — the right fit for
+  interactive report investigation). True unattended draining instead needs an OS-level
+  scheduler running the agent headless (cron → `claude -p`) with its own credentials, a
+  least-privilege allowlist, and answer-only scoping. Also recorded: the
+  `grep -c … || echo 0` double-count gotcha that silently breaks such a watcher.
 
 ## 2026-07-13
 

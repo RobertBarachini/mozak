@@ -69,13 +69,37 @@ any harness runs it identically:
 7. **Check** (AGENTS rule 7): only the `pages/` and `journals/` edits are tracked — the
    render and `annotations.md` are gitignored — then the human commits.
 
-**Cadence.** The drain can repeat, not just run once: the file is the queue, so each pass
-re-reads whatever is `[pending]`. Trigger it by hand (the `/drain-report` lens) or have
-your harness re-run it periodically — e.g. Claude Code `/loop` — so newly-flagged passages
-get answered without re-prompting; with the render open, live-refresh shows those answers
-landing. Opt-in by design: an unattended loop does real work and spends tokens, so the
-user picks the cadence, and it stays agent-agnostic — the loop is just this drain,
-repeated.
+**Cadence — how to re-run it, and how to auto-drive the loop.** The drain can repeat, not
+just run once: the file is the queue, so each pass re-reads whatever is `[pending]`. Three
+triggers, in increasing autonomy:
+
+1. **On demand** (attended) — the user says "drain", or runs a lens like `/drain-report`.
+2. **Event-driven, in-session** (the live loop) — watch `annotations.md` and drain the
+   moment it gains a `[pending]` entry, so newly-flagged passages get answered without
+   re-prompting; with the render open, live-refresh shows the answers landing. **Drive this
+   off a file-change *event*, not a wall-clock timer.** An interactive agent session
+   typically has no between-turn scheduler — a fixed-interval job (an in-session cron, a
+   `/loop 5m`) never fires while the session sits idle — but it *does* have an
+   event/completion wake channel: the same one that notifies the agent when a background
+   task finishes. So arm a **persistent watcher that emits only when the pending count
+   *rises*** (emit-on-rise, so the agent's own drain writes — which lower the count — don't
+   re-trigger it, which would be a self-feeding loop); each emission wakes the agent to
+   drain, then it re-arms. This is **session-lived** — it dies when the session closes,
+   which is exactly right for interactive report investigation. *(Claude Code: the
+   `Monitor` tool running a persistent `grep -c '\[pending\]'` poll. Shell gotcha:
+   `grep -c … || echo 0` double-counts — `grep -c` prints `0` **and** exits non-zero on no
+   match, so the `||` appends a second `0` and corrupts the integer compare; default empty
+   with `${x:-0}` instead of the `||` idiom.)*
+3. **Unattended, session-independent** (walk away) — only an **OS/host-level scheduler
+   invoking the agent headless** (e.g. cron → `claude -p`) survives the session closing. It
+   needs its own credentials (an interactive subscription login won't authenticate
+   headless — use an API key or a minted long-lived token), a **least-privilege tool
+   allowlist**, and **answer-only scoping**: write only the gitignored sidecar — never
+   auto-distill into `pages/` or auto-commit, which stay human-reviewed (rule 7).
+
+Opt-in by design: any loop does real work and spends tokens, so the user picks the trigger
+and cadence. It stays agent-agnostic — the loop is just this drain, repeated; the seam is
+still the file, not an API.
 
 ## Why the tool holds no AI (harness-agnostic by construction)
 
