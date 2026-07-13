@@ -196,8 +196,11 @@ html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;co
 .mzk-spacer{flex:1}
 #mzk-bar button{font:inherit;padding:6px 11px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;cursor:pointer}
 #mzk-bar button:hover{border-color:var(--accent)}
-#mzk-report{position:fixed;top:46px;left:0;right:0;bottom:0;width:100%;border:0;background:#fff}
-body.mzk-open #mzk-report{right:360px;width:auto}
+/* iframe is a REPLACED element: top/right/bottom/left do NOT stretch it (that only
+   works for non-replaced blocks) and width/height:auto would collapse to the intrinsic
+   ~300x150 — so size it explicitly with calc against the fixed containing block. */
+#mzk-report{position:fixed;top:46px;left:0;width:100%;height:calc(100% - 46px);border:0;background:#fff}
+body.mzk-open #mzk-report{width:calc(100% - 360px)}
 #mzk-drawer{position:fixed;top:46px;right:0;bottom:0;width:360px;background:var(--card);border-left:1px solid var(--line);overflow-y:auto;transform:translateX(100%);transition:transform .15s;z-index:9}
 body.mzk-open #mzk-drawer{transform:none}
 .mzk-card{border:1px solid var(--line);background:var(--bg);border-radius:8px;margin:10px;padding:10px;font-size:13px;cursor:pointer}

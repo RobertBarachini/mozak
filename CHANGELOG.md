@@ -27,6 +27,12 @@ Newest first.
   a text-quote selector (exact + prefix/suffix + nearest heading), so they re-attach by
   content and survive a re-render; a passage that vanishes surfaces as `orphaned`, never
   silently lost.
+- **Fix — the report iframe rendered as a ~300×150 box.** The `#mzk-report` iframe was
+  sized by `top/right/bottom/left` offsets with `width/height:auto`, but an `<iframe>` is a
+  *replaced* element: those offsets don't stretch it and `auto` collapses to the intrinsic
+  ~300×150. Now sized explicitly with `height:calc(100% - 46px)` and (drawer-open)
+  `width:calc(100% - 360px)`. Reproduced in Firefox and Brave; surfaced on the loop's first
+  live shakedown.
 - **Drain contract in one home — `pages/report-annotation-loop.md`** (a new template-owned
   meta page): the mini-ingestion loop an agent runs over `annotations.md` (read pending →
   work → distill into `pages/` → record status + an `**Agent:**` line → journal → re-render
