@@ -28,6 +28,9 @@ reasoning behind them.
 
 - [[research-flow]] — the end-to-end loop from research question to re-promptable
   knowledge, and the boundary with project repos.
+- [[report-annotation-loop]] — the talk-back verb for renders: annotate a rendered
+  report, then drain the prompts back into the graph (research-flow step 7, aimed at a
+  render).
 - [[ingestion-toolchain]] — tool policy (probe first, offer-install, degrade
   loudly) and per-format recipes for draining `raw/`.
 - [[claim-level-provenance]] — cite at the claim, repair surgically; the

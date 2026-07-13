@@ -55,7 +55,10 @@ into `pages/` — a render is never an insight's only home — and every render
 leaves a journal line naming the notes it drew on, so provenance survives the
 render's disposal. A render stays **local** to that folder (or a location the user
 explicitly names); publishing it outward — to Claude/Anthropic Artifacts or any external
-host — requires the user's explicit authorization (AGENTS rule 10).
+host — requires the user's explicit authorization (AGENTS rule 10). To turn a reader's
+reactions to a render back into graph work, [[report-annotation-loop]] captures
+per-passage re-prompts on the rendered HTML and drains them through this same
+distill-and-journal cycle.
 
 ## Boundary with project repos
 

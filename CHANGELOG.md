@@ -14,6 +14,37 @@ in its own journal.
 
 Newest first.
 
+## 2026-07-13
+
+- **New tool `tools/annotate.py` — the report annotation loop.** A stdlib-only
+  capture-and-serve tool: `python3 tools/annotate.py <report.html>` serves a render on
+  `127.0.0.1` only (a local artifact, rule 10) inside a same-origin iframe with an injected
+  overlay; the user highlights passages and attaches follow-up prompts, saved to an
+  `annotations.md` beside the render. The tool applies **no AI** — no SDK, key, or model —
+  so the AI harness stays a replaceable lens (`pages/plain-text-knowledge-graphs.md`): any
+  agent drains the file, and swapping harness/model/provider changes neither the tool nor
+  the file format. Highlights are non-destructive (CSS Custom Highlight API) and anchored by
+  a text-quote selector (exact + prefix/suffix + nearest heading), so they re-attach by
+  content and survive a re-render; a passage that vanishes surfaces as `orphaned`, never
+  silently lost.
+- **Drain contract in one home — `pages/report-annotation-loop.md`** (a new template-owned
+  meta page): the mini-ingestion loop an agent runs over `annotations.md` (read pending →
+  work → distill into `pages/` → record status + an `**Agent:**` line → journal → re-render
+  → check). Linked from `pages/research-flow.md` ("Synthesizing outward" — the render's
+  talk-back verb) and `pages/moc-meta.md`; the AGENTS `tools/` row points to the tool.
+- **Two optional lenses over the file, never dependencies:** a Claude Code `/drain-report`
+  skill (`.claude/skills/drain-report/` — a thin pointer to the contract, like `CLAUDE.md`
+  is a thin shim), and a read-only MCP stdio interface (`annotate.py mcp` — a minimal
+  hand-rolled JSON-RPC server, since the official SDK is a third-party dep — registered
+  optionally per SETUP.md §5, defaulting to the latest render).
+- **Ownership plumbing for the shipped skill:** `.claude/skills/` joins the SYNC
+  Template-owned set (the guard's table parser picks up the new token, no manifest to
+  maintain — rule 9); `.gitignore` ships `.claude/skills/` but keeps per-machine Claude
+  state local (`.claude/*` + `!.claude/skills/`, mirroring the `raw/*` idiom).
+- Rationale: a render was a one-way projection of the graph until now — this closes
+  research → render → sharper research without leaving the plain-text substrate, and the
+  genericity comes from the tool doing zero AI: the seam is a file, not an API.
+
 ## 2026-07-09 (later)
 
 - **File-grain ownership replaces the two designated zones** (SYNC Ownership table).

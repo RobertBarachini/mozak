@@ -61,6 +61,12 @@ claude mcp add --transport http obsidian https://127.0.0.1:27124/mcp/ \
 
 # Logseq (ergut/mcp-logseq): enable Settings → Features → HTTP APIs server,
 # generate a token, then follow that repo's README.
+
+# Report annotations (this repo's own tools/annotate.py — a read-only stdio server
+# exposing the latest render's annotation queue to any MCP harness). Optional: the
+# annotations.md file is the source of truth, so an agent can drain it without this.
+# See pages/report-annotation-loop.md; the /drain-report skill is the Claude Code path.
+claude mcp add --transport stdio annotate -- python3 tools/annotate.py mcp
 ```
 
 ## 6. Ingestion toolchain (install when a task first needs it)

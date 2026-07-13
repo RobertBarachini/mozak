@@ -3,6 +3,11 @@
 /logseq/
 .trash/
 
+# Claude Code: ship only .claude/skills/ (tracked agent lenses, e.g. drain-report);
+# per-machine Claude state (settings.local.json, caches) stays local.
+.claude/*
+!.claude/skills/
+
 # Derived artifacts — never committed. links.json: the mechanical index,
 # rebuilt by `graph.py check` after edits (rule 7), pulls (SYNC ritual), and
 # clones (SETUP smoke test). presentations/<yyyy-mm-dd>-<slug>/: agent-rendered
