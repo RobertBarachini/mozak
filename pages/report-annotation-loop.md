@@ -23,8 +23,11 @@ which closes the loop research → render → sharper research.
 `127.0.0.1` only — a local artifact per AGENTS rule 10, never published outward) with
 an injected overlay: select text, write a prompt, and each annotation is saved to an
 `annotations.md` beside the render. The tool applies **no AI** — it only captures and
-serves (why that matters is below). Flags and endpoints live in the tool's own module
-docstring, not restated here (AGENTS rule 9).
+serves (why that matters is below). The served page **live-refreshes** (it polls the
+file's mtime), so as an agent drains, the reader watches statuses flip to `[answered]`
+and answers land in place — no manual reload; a re-render reloads the embedded report and
+re-anchors. Flags and endpoints live in the tool's own module docstring, not restated
+here (AGENTS rule 9).
 
 ## The annotations file (the durable contract)
 
@@ -65,6 +68,14 @@ any harness runs it identically:
    surviving annotations by quote and flags any casualties as `orphaned`.
 7. **Check** (AGENTS rule 7): only the `pages/` and `journals/` edits are tracked — the
    render and `annotations.md` are gitignored — then the human commits.
+
+**Cadence.** The drain can repeat, not just run once: the file is the queue, so each pass
+re-reads whatever is `[pending]`. Trigger it by hand (the `/drain-report` lens) or have
+your harness re-run it periodically — e.g. Claude Code `/loop` — so newly-flagged passages
+get answered without re-prompting; with the render open, live-refresh shows those answers
+landing. Opt-in by design: an unattended loop does real work and spends tokens, so the
+user picks the cadence, and it stays agent-agnostic — the loop is just this drain,
+repeated.
 
 ## Why the tool holds no AI (harness-agnostic by construction)
 

@@ -5,6 +5,8 @@ A capture-and-serve tool, NOT an AI client: it serves a report locally with an
 injected annotation overlay and writes highlighted-text + prompt pairs to a plain
 `annotations.md` beside the render. Whatever harness you point at that file (Claude
 Code, another agent, a script) does the work — see pages/report-annotation-loop.md.
+The served page live-refreshes (polls file mtimes), so an agent's drain — flipped
+statuses and appended answers — appears in an open page without a manual reload.
 The tool holds no API key, names no model, and binds 127.0.0.1 only (AGENTS rule 10).
 Conventions: AGENTS.md. Stdlib only.
 
@@ -491,6 +493,21 @@ document.getElementById('mzk-toggle').onclick=toggleDrawer;
 document.body.classList.add('mzk-open');
 window.addEventListener('resize',hideFloat);
 iframe.addEventListener('load',iframeReady);
+// live refresh: poll /version; reflect an agent's drain / re-render without a manual reload
+var VER=null, POLLING=false;
+function pollVersion(){
+  if(POLLING||document.hidden) return;
+  POLLING=true;
+  api('GET','/version').then(function(v){
+    POLLING=false;
+    if(!VER){VER=v;return;}
+    var annChanged=v.ann!==VER.ann, repChanged=v.report!==VER.report;
+    VER=v;
+    if(repChanged){ reload().then(function(){ iframe.src='/report?v='+v.report; }); }
+    else if(annChanged){ reload(); }
+  },function(){POLLING=false;});
+}
+setInterval(pollVersion,1500);
 reload();
 })();
 """
@@ -561,6 +578,16 @@ class Handler(BaseHTTPRequestHandler):
                 "created": datetime.now().strftime("%Y-%m-%d"),
                 "title": report_title(self.html_path)}
 
+    def _version(self):
+        # cheap change-signal for the client poller: mtimes of the two files it mirrors,
+        # so an agent's out-of-band write to annotations.md (or a re-render) is noticed
+        def mt(p):
+            try:
+                return os.stat(p).st_mtime_ns
+            except OSError:
+                return 0
+        return {"ann": mt(self.ann_path), "report": mt(self.html_path)}
+
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/":
@@ -570,6 +597,8 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/annotations":
             meta, items = load_annotations(self.ann_path)
             self._json({"meta": meta, "items": items})
+        elif path == "/version":
+            self._json(self._version())
         elif path == "/favicon.ico":
             self._send(204, b"", "text/plain")
         else:

@@ -14,6 +14,22 @@ in its own journal.
 
 Newest first.
 
+## 2026-07-13 (later)
+
+- **`annotate.py` serve now live-refreshes — answers land in an open render without a
+  reload.** The served page polls a new cheap `GET /version` (mtimes of `annotations.md`
+  + the report) every ~1.5s and, on change, calls the existing `reload()` (re-pull →
+  re-anchor → re-render the drawer, which already shows the `**Agent:**` answer); a
+  changed report reloads the embedded iframe and re-anchors by quote. So an agent's drain
+  — flipped statuses, appended answers — appears in place while the reader watches. This
+  is **client polling**, not SSE/WebSocket/MCP: fewer moving parts, no long-lived
+  connections, still stdlib-only and `127.0.0.1`-only (rule 10); the file stays the seam
+  (the poll reflects file state, it adds no API the agent must speak).
+- **Drain cadence documented** in `pages/report-annotation-loop.md`: the drain can be
+  re-run periodically (the file is the queue) — by hand or via a harness loop (e.g. Claude
+  Code `/loop`), opt-in and agent-agnostic — so with live-refresh a reader sees
+  freshly-flagged passages answered as the agent works.
+
 ## 2026-07-13
 
 - **New tool `tools/annotate.py` — the report annotation loop.** A stdlib-only
