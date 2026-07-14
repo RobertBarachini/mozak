@@ -14,6 +14,20 @@ in its own journal.
 
 Newest first.
 
+## 2026-07-14 (later)
+
+- **`annotate.py` — a transient `processing` status.** Between `pending` and
+  `answered`/`distilled`, an agent may flip an entry to `[processing]` when it picks up a
+  slow drain (a verification, a long synthesis) so a watched live page shows work in flight
+  (pulsing chip). It is **transient, not durable**: the sole difference from every other
+  status, which are properties of the annotation. Stuck-state is impossible by construction
+  — `cmd_serve` **sweeps any `processing` → `pending` on startup** (single-owner: the server
+  is the only process and nothing is mid-drain at boot, so leftover `processing` is a
+  died-mid-drain artifact), and the Reopen button also requeues it. Optional and
+  agent-agnostic: a quick drain skips straight to `answered`; the Monitor still keys on
+  `[pending]`, so `processing` neither re-triggers the loop nor is counted. Documented in
+  `pages/report-annotation-loop.md` (status list + drain step 2).
+
 ## 2026-07-14
 
 - **`annotate.py` — threaded conversations per annotation (schema `annotate/1` → `annotate/2`).**

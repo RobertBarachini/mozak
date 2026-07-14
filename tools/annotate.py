@@ -37,7 +37,7 @@ from urllib.parse import unquote, urlparse
 
 DEFAULT_PORT = 8765
 SCHEMA = "annotate/2"          # /1 = single prompt+answer; /2 = a thread of turns
-STATUS_ORDER = {"pending": 0, "orphaned": 1, "answered": 2, "distilled": 3, "dismissed": 4}
+STATUS_ORDER = {"pending": 0, "processing": 1, "orphaned": 2, "answered": 3, "distilled": 4, "dismissed": 5}
 UPDATABLE = ("status", "selector", "section", "position", "scope")
 
 FRONT_RE = re.compile(r"\A---\n(.*?)\n---\n", re.S)
@@ -273,6 +273,8 @@ body.mzk-viewing #mzk-view{display:flex}
 .mzk-wl.mzk-missing{opacity:.55;cursor:help;border-bottom-style:dashed}
 .mzk-chip{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;background:var(--line);text-transform:capitalize}
 .mzk-chip.pending{background:#f59e0b;color:#241a04}
+.mzk-chip.processing{background:#6366f1;color:#fff;animation:mzk-pulse 1.1s ease-in-out infinite}
+@keyframes mzk-pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .mzk-chip.orphaned{background:#ef4444;color:#fff}
 .mzk-chip.answered,.mzk-chip.distilled{background:#10b981;color:#04231a}
 .mzk-chip.dismissed{background:var(--line);color:var(--mut)}
@@ -515,7 +517,7 @@ function anchorAll(){
 
 // ---- drawer ----
 function renderDrawer(){
-  var RANK={pending:0,orphaned:1,answered:2,distilled:3,dismissed:4};
+  var RANK={pending:0,processing:1,orphaned:2,answered:3,distilled:4,dismissed:5};
   var rank=function(s){return s in RANK?RANK[s]:9;};   // NB: not `RANK[s]||9` — pending is 0 (falsy)
   var all=DATA.items.slice().sort(function(a,b){
     return (rank(a.status)-rank(b.status))||(idNum(b.id)-idNum(a.id));});   // status group, then newest first
@@ -1011,6 +1013,16 @@ def cmd_serve(root: Path, html: str, port: int, browser: str) -> int:
         dump_annotations(ann, {"report": _rel(html_path, root),
                                "created": datetime.now().strftime("%Y-%m-%d"),
                                "title": report_title(html_path)}, [])
+    else:
+        # single-owner recovery: this server is the sole process, and nothing is mid-drain
+        # at startup, so any leftover `processing` is stale (a drain that died) — requeue it.
+        meta0, items0 = load_annotations(ann)
+        stale = [a for a in items0 if a.get("status") == "processing"]
+        if stale:
+            for a in stale:
+                a["status"] = "pending"
+            dump_annotations(ann, meta0, items0)
+            print("  reset %d stale 'processing' → pending" % len(stale))
     Handler.html_path, Handler.ann_path, Handler.root = html_path, ann, root
     srv, bound = _bind(port)
     url = "http://127.0.0.1:%d/" % bound
@@ -1076,7 +1088,7 @@ MCP_TOOLS = [
                     "opening prompt, and turn/unanswered counts).",
      "inputSchema": {"type": "object", "properties": {
          "status": {"type": "string",
-                    "description": "optional filter: pending|answered|distilled|orphaned|dismissed"}}}},
+                    "description": "optional filter: pending|processing|answered|distilled|orphaned|dismissed"}}}},
     {"name": "get_annotation",
      "description": "Get one annotation by id, including its text-quote anchor and the "
                     "full conversation thread (turns, each a prompt + optional agent answer).",
@@ -1203,7 +1215,7 @@ def main() -> int:
     p_list = sub.add_parser("list")
     p_list.add_argument("html")
     p_list.add_argument("--status", default=None,
-                        help="only show this status (pending|answered|distilled|orphaned|dismissed)")
+                        help="only show this status (pending|processing|answered|distilled|orphaned|dismissed)")
     p_mcp = sub.add_parser("mcp")
     p_mcp.add_argument("html", nargs="?", default=None)
     args = ap.parse_args(argv)

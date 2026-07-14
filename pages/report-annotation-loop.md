@@ -44,9 +44,13 @@ the **fenced JSON** owns the machine anchor; the **prose** owns the conversation
 The anchor is a text-quote selector (the quoted `exact` text plus short `prefix`/
 `suffix` context and the nearest heading), not a line offset — so it re-attaches by
 *content* and survives a re-render that rewrote the surrounding markup. Statuses:
-`pending` → `answered` (a reply was enough) or `distilled` (a durable note was
-created/updated); `orphaned` (the quoted passage vanished from a re-render — surfaced
-loudly in the drawer, never silently dropped); `dismissed`.
+`pending` → optionally `processing` (an agent picked the task up — a **transient,
+live-session** marker shown with a pulsing chip; it is swept back to `pending` on server
+restart and by the Reopen button, so an entry whose drain died mid-flight never sticks)
+→ `answered` (a reply was enough) or `distilled` (a durable note was created/updated);
+`orphaned` (the quoted passage vanished from a re-render — surfaced loudly in the drawer,
+never silently dropped); `dismissed`. Only `processing` is transient; the rest are durable
+states of the annotation.
 
 ## Drain — what the agent does
 
@@ -60,7 +64,11 @@ any harness runs it identically:
 2. **Work** each prompt (answer, verify a claim, expand a passage, find a
    contradiction) under the usual discipline: scope the effort by [[search-gates]], and
    on any conflict follow [[claim-level-provenance]] (contested first, adversarial both
-   ways). The entry's quote and section pin exactly which passage it concerns.
+   ways). The entry's quote and section pin exactly which passage it concerns. For a drain
+   you expect to take a while (a verification, a long synthesis), you may first flip the
+   heading to `[processing]` so a watched live page shows work in flight — it's an optional,
+   transient courtesy (reset on server restart), not load-bearing; a quick answer can skip
+   straight to step 4.
 3. **Distill** durable results into `pages/` under the admission test (AGENTS rule 5,
    [[store-the-delta]]), with contextual links (rule 4) and claim anchors (rule 8) —
    never leave an insight only in the disposable `annotations.md`.
