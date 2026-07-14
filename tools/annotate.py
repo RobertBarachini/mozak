@@ -13,7 +13,7 @@ Conventions: AGENTS.md. Stdlib only.
 Usage:
   python3 tools/annotate.py <report.html>              # serve (implicit) + open a browser
   python3 tools/annotate.py serve <report.html> [--port N] [--no-browser] [--open]
-  python3 tools/annotate.py list  <report.html>        # print the annotation queue, no server
+  python3 tools/annotate.py list  <report.html> [--status S]   # print the queue (optionally one status), no server
   python3 tools/annotate.py mcp   [report.html]        # optional MCP stdio server (see SETUP.md §5)
 
 Annotations land in the report's directory as `annotations.md` (Markdown with a fenced
@@ -36,9 +36,9 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 DEFAULT_PORT = 8765
-SCHEMA = "annotate/1"
+SCHEMA = "annotate/2"          # /1 = single prompt+answer; /2 = a thread of turns
 STATUS_ORDER = {"pending": 0, "orphaned": 1, "answered": 2, "distilled": 3, "dismissed": 4}
-UPDATABLE = ("status", "prompt", "answer", "selector", "section", "position", "scope")
+UPDATABLE = ("status", "selector", "section", "position", "scope")
 
 FRONT_RE = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 HEADING_RE = re.compile(r"^##\s+\d+\.\s+\[(\w+)\]", re.M)
@@ -79,10 +79,23 @@ def annotations_path(html_path: Path, root: Path) -> Path:
     return root / "_generated" / "annotations" / f"{slug}-{key}" / "annotations.md"
 
 
-def _field(body: str, name: str):
-    m = re.search(r"\*\*" + name + r":\*\*[ \t]*(.*?)(?=\n\*\*(?:Prompt|Agent):\*\*|\Z)",
-                  body, re.S)
-    return m.group(1).strip() if m else None
+def _turns(body: str):
+    """Parse the ordered conversation turns from an entry body. Each `**Prompt:**`
+    opens a turn; the next `**Agent:**` fills that turn's answer; a stray `**Agent:**`
+    with no open turn gets its own. A trailing prompt with answer=None is an open turn
+    (⟺ the entry is `[pending]`). A single old prompt/answer pair reads as one turn —
+    so `annotate/1` files parse unchanged (backward-compatible)."""
+    turns = []
+    for m in re.finditer(r"\*\*(Prompt|Agent):\*\*[ \t]*(.*?)"
+                         r"(?=\n\*\*(?:Prompt|Agent):\*\*|\Z)", body, re.S):
+        kind, text = m.group(1), m.group(2).strip()
+        if kind == "Prompt":
+            turns.append({"prompt": text, "answer": None})
+        elif turns and turns[-1]["answer"] is None:
+            turns[-1]["answer"] = text            # Agent fills the open turn
+        else:
+            turns.append({"prompt": "", "answer": text})
+    return turns
 
 
 def _parse_entry(chunk: str):
@@ -102,14 +115,13 @@ def _parse_entry(chunk: str):
         "section": data.get("section"),
         "selector": data.get("selector"),
         "position": data.get("position"),
-        "prompt": _field(body, "Prompt") or "",
-        "answer": _field(body, "Agent"),
+        "turns": _turns(body),
     }
 
 
 def load_annotations(path: Path):
     """Return (meta: dict, items: list[dict]). Status lives only in the heading token;
-    the fenced JSON owns the machine anchor; prose owns prompt + agent answer."""
+    the fenced JSON owns the machine anchor; prose owns the conversation turns."""
     if not path.exists():
         return {}, []
     text = path.read_text(encoding="utf-8")
@@ -129,6 +141,26 @@ def load_annotations(path: Path):
         if rec and rec.get("id"):
             items.append(rec)
     return meta, items
+
+
+def raw_entry(text: str, tid: str):
+    """The verbatim Markdown block for one annotation id (heading → fence), for a
+    'View raw' peek — the file itself, not a re-serialization."""
+    body = text
+    mf = FRONT_RE.match(text)
+    if mf:
+        body = text[mf.end():]
+    for chunk in re.split(r"(?m)^(?=##\s+\d+\.\s+\[)", body):
+        if not chunk.lstrip().startswith("##"):
+            continue
+        mj = FENCE_RE.search(chunk)
+        if mj:
+            try:
+                if json.loads(mj.group(1)).get("id") == tid:
+                    return chunk.strip() + "\n"
+            except json.JSONDecodeError:
+                pass
+    return None
 
 
 def _label(a: dict) -> str:
@@ -155,9 +187,10 @@ def dump_annotations(path: Path, meta: dict, items: list) -> None:
         sel = a.get("selector") or {}
         if a.get("scope") == "selection" and sel.get("exact"):
             out += ["> %s" % sel["exact"].replace("\n", " "), ""]
-        out += ["**Prompt:** %s" % (a.get("prompt") or "").strip(), ""]
-        if a.get("answer"):
-            out += ["**Agent:** %s" % a["answer"].strip(), ""]
+        for t in a.get("turns") or []:
+            out += ["**Prompt:** %s" % (t.get("prompt") or "").strip(), ""]
+            if t.get("answer"):
+                out += ["**Agent:** %s" % t["answer"].strip(), ""]
         data = {"id": a.get("id"), "scope": a.get("scope", "selection"),
                 "section": a.get("section"), "selector": a.get("selector"),
                 "position": a.get("position")}
@@ -182,7 +215,8 @@ def _normalize_new(data: dict) -> dict:
     return {"id": data.get("id"), "status": data.get("status", "pending"),
             "scope": data.get("scope", "selection"), "section": data.get("section"),
             "selector": data.get("selector"), "position": data.get("position"),
-            "prompt": (data.get("prompt") or "").strip(), "answer": data.get("answer")}
+            "turns": [{"prompt": (data.get("prompt") or "").strip(),
+                       "answer": data.get("answer")}]}
 
 
 # ------------------------------------------------------------------- the client
@@ -202,19 +236,47 @@ html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;co
    works for non-replaced blocks) and width/height:auto would collapse to the intrinsic
    ~300x150 — so size it explicitly with calc against the fixed containing block. */
 #mzk-report{position:fixed;top:46px;left:0;width:100%;height:calc(100% - 46px);border:0;background:#fff}
-body.mzk-open #mzk-report{width:calc(100% - 360px)}
-#mzk-drawer{position:fixed;top:46px;right:0;bottom:0;width:360px;background:var(--card);border-left:1px solid var(--line);overflow-y:auto;transform:translateX(100%);transition:transform .15s;z-index:9}
+body.mzk-open #mzk-report{width:calc(100% - var(--drawer-w,360px))}
+#mzk-drawer{position:fixed;top:46px;right:0;bottom:0;width:var(--drawer-w,360px);background:var(--card);border-left:1px solid var(--line);overflow-y:auto;transform:translateX(100%);transition:transform .15s;z-index:9}
 body.mzk-open #mzk-drawer{transform:none}
+#mzk-grip{position:fixed;top:46px;bottom:0;right:var(--drawer-w,360px);width:7px;margin-right:-3px;cursor:ew-resize;z-index:11;display:none}
+#mzk-grip:hover,#mzk-grip.mzk-drag{background:var(--accent);opacity:.55}
+body.mzk-open #mzk-grip{display:block}
+#mzk-view{position:fixed;top:46px;left:0;width:100%;height:calc(100% - 46px);background:var(--bg);z-index:8;display:none;flex-direction:column}
+body.mzk-open #mzk-view{width:calc(100% - var(--drawer-w,360px))}
+body.mzk-viewing #mzk-view{display:flex}
+#mzk-view-bar{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+#mzk-view-bar button{font:inherit;font-size:12px;padding:5px 11px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;cursor:pointer}
+#mzk-view-bar button:hover{border-color:var(--accent)}
+#mzk-view-title{font-weight:600;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+#mzk-view-body{flex:1;overflow:auto;padding:22px 30px;line-height:1.62}
+#mzk-view-body>*{max-width:780px}
+#mzk-view-body h1{font-size:1.5em}#mzk-view-body h2{font-size:1.25em}#mzk-view-body h3{font-size:1.08em}
+#mzk-view-body h1,#mzk-view-body h2,#mzk-view-body h3{line-height:1.25;margin:1.1em 0 .4em}
+#mzk-view-body ul,#mzk-view-body ol{padding-left:22px}#mzk-view-body li{margin:3px 0}
+#mzk-view-body p,#mzk-view-body li{text-align:justify;hyphens:auto}
+#mzk-view-body a{color:var(--accent)}
+#mzk-view-body blockquote{border-left:3px solid var(--line);margin:8px 0;padding-left:12px;color:var(--mut)}
+#mzk-view-body pre.mzk-code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:10px;overflow:auto;font-size:12.5px}
+#mzk-view-body pre.mzk-raw{white-space:pre-wrap;word-break:break-word;text-align:left;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5}
 .mzk-card{border:1px solid var(--line);background:var(--bg);border-radius:8px;margin:10px;padding:10px;font-size:13px;cursor:pointer}
 .mzk-card .sec{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
 .mzk-card blockquote{margin:6px 0;padding-left:8px;border-left:3px solid #f5c518;color:var(--fg);font-style:italic}
-.mzk-card .prompt{margin:6px 0;white-space:pre-wrap}
-.mzk-card .agent{margin:6px 0;color:var(--mut);white-space:pre-wrap;border-top:1px dashed var(--line);padding-top:6px}
+.mzk-card .prompt{margin:8px 0;white-space:pre-wrap;padding:2px 0 2px 8px;border-left:3px solid #8b5cf6}
+.mzk-card .agent{margin:6px 0;color:var(--fg);border-top:1px dashed var(--line);padding-top:6px}
+.mzk-card .agent p{margin:6px 0}.mzk-card .agent p:first-child{margin-top:0}
+.mzk-card .agent ul{margin:6px 0;padding-left:18px}.mzk-card .agent li{margin:2px 0}
+.mzk-card .agent code{background:var(--card);padding:1px 4px;border-radius:3px;font-size:12px}
+.mzk-card .agent a{color:var(--accent)}
+.mzk-wl{color:var(--accent);border-bottom:1px dotted var(--accent);text-decoration:none;cursor:pointer}
+.mzk-wl::after{content:"📝";font-size:.82em;margin-left:3px;border-bottom:0;cursor:default}
+.mzk-wl.mzk-missing{opacity:.55;cursor:help;border-bottom-style:dashed}
 .mzk-chip{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;background:var(--line);text-transform:capitalize}
 .mzk-chip.pending{background:#f59e0b;color:#241a04}
 .mzk-chip.orphaned{background:#ef4444;color:#fff}
 .mzk-chip.answered,.mzk-chip.distilled{background:#10b981;color:#04231a}
 .mzk-chip.dismissed{background:var(--line);color:var(--mut)}
+.mzk-card pre.mzk-raw{white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px;margin:6px 0;font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace;max-height:360px;overflow:auto}
 .mzk-rowbtns{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
 .mzk-rowbtns button{font:inherit;font-size:11px;padding:2px 8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:5px;cursor:pointer}
 #mzk-float{position:fixed;z-index:20;transform:translate(-50%,6px)}
@@ -232,6 +294,11 @@ body.mzk-open #mzk-drawer{transform:none}
 .mzk-modal button{font:inherit;padding:7px 14px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
 .mzk-modal button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .mzk-empty{color:var(--mut);padding:18px;font-size:13px;text-align:center}
+#mzk-search{position:sticky;top:0;background:var(--card);padding:8px 10px;border-bottom:1px solid var(--line);z-index:1}
+#mzk-q{width:100%;font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.mzk-follow{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.mzk-follow textarea{width:100%;font:inherit;font-size:12px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);resize:vertical}
+.mzk-follow button{align-self:flex-end;font:inherit;font-size:11px;padding:3px 10px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:5px;cursor:pointer}
 """
 
 # Injected into the report's OWN document (the iframe) — non-destructive highlight,
@@ -247,6 +314,9 @@ var iframe=document.getElementById('mzk-report');
 var listEl=document.getElementById('mzk-list');
 var countEl=document.getElementById('mzk-count');
 var DATA={meta:{},items:[]};
+var NOTES=NOTES_JSON;       // {stem: repo-relative note path} — injected at render time
+var RAW=new Set(), RAWTEXT={};   // per-card "view raw" toggle state + fetched raw block
+var CURNOTE=null, NAV=[], CURMD='', VIEWRAW=false;   // in-pane note viewer: stem, back-stack, raw md, raw-toggle
 var idoc=null, iwin=null;
 var RANGES=new Map();       // id -> Range (into the iframe document)
 var floatEl=null, popEl=null;
@@ -257,6 +327,72 @@ function api(method,path,body){
     body:body?JSON.stringify(body):undefined}).then(function(r){return r.json();});
 }
 function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;}
+
+// ---- minimal, self-contained markdown for agent answers (escape FIRST, then mark up) ----
+function wlink(target,shown){
+  // a real anchor to the note file when the stem resolves (so right-click can copy the
+  // path/text and left-click peeks it — handled in the card click listener); the 📝 marker
+  // (a CSS ::after) distinguishes it from a web link. Unresolved stems stay inert.
+  var stem=(target||'').trim(), path=NOTES[stem];
+  if(path) return '<a class=mzk-wl href="'+path+'" data-note="'+stem+'" title="'+path+'">'+shown+'</a>';
+  return '<span class="mzk-wl mzk-missing" title="unresolved note: '+stem+'">'+shown+'</span>';
+}
+function mdInline(s){
+  // [[target|shown]] / [[target]] -> a link to the note file (see wlink)
+  s=s.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g,function(m,target,shown){return wlink(target,shown);});
+  s=s.replace(/\[\[([^\]]+)\]\]/g,function(m,target){return wlink(target,target);});
+  s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // [text](url) -> anchor only for http(s); anything else renders as plain text
+  s=s.replace(/\[([^\]]+)\]\(([^)\s"']+)\)/g,function(m,t,u){
+    return /^https?:\/\//.test(u)?'<a href="'+u+'" target=_blank rel=noopener>'+t+'</a>':t;});
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>');
+  return s;
+}
+function mdToHtml(src){
+  var blocks=esc(src||'').split(/\n{2,}/), out=[];
+  blocks.forEach(function(b){
+    if(!b.trim()) return;
+    var lines=b.split(/\n/);
+    if(/^\s*[-*]\s+/.test(lines[0])){
+      out.push('<ul>'+lines.filter(function(l){return l.trim();}).map(function(l){
+        return '<li>'+mdInline(l.replace(/^\s*[-*]\s+/,''))+'</li>';}).join('')+'</ul>');
+    } else {
+      out.push('<p>'+mdInline(b.replace(/\n/g,'<br>'))+'</p>');
+    }
+  });
+  return out.join('');
+}
+// block-level markdown for a whole note (headings/lists/code/quote + inline). Basic by
+// design — enough to read a note in-pane; wikilinks stay clickable via mdInline/wlink.
+function mdDoc(src){
+  src=String(src||'').replace(/\r\n/g,'\n').replace(/^---\n[\s\S]*?\n---\n/,'');  // drop frontmatter
+  var lines=src.split('\n'), out=[], para=[], i=0;
+  function flush(){ if(para.length){out.push('<p>'+mdInline(esc(para.join(' ')))+'</p>');para=[];} }   // single newlines are soft wraps → spaces, not <br>
+  function items(re,tag){ var b=[]; while(i<lines.length&&re.test(lines[i])){b.push('<li>'+mdInline(esc(lines[i].replace(re,'')))+'</li>');i++;} out.push('<'+tag+'>'+b.join('')+'</'+tag+'>'); }
+  while(i<lines.length){
+    var ln=lines[i], h=/^(#{1,6})\s+(.*)$/.exec(ln);
+    if(/^```/.test(ln)){ flush(); var c=[]; i++; while(i<lines.length&&!/^```/.test(lines[i])){c.push(lines[i]);i++;} i++; out.push('<pre class=mzk-code>'+esc(c.join('\n'))+'</pre>'); }
+    else if(h){ flush(); out.push('<h'+h[1].length+'>'+mdInline(esc(h[2]))+'</h'+h[1].length+'>'); i++; }
+    else if(/^\s*[-*]\s+/.test(ln)){ flush(); items(/^\s*[-*]\s+/,'ul'); }
+    else if(/^\s*\d+\.\s+/.test(ln)){ flush(); items(/^\s*\d+\.\s+/,'ol'); }
+    else if(/^\s*>\s?/.test(ln)){ flush(); var q=[]; while(i<lines.length&&/^\s*>\s?/.test(lines[i])){q.push(lines[i].replace(/^\s*>\s?/,''));i++;} out.push('<blockquote>'+mdInline(esc(q.join(' ')))+'</blockquote>'); }
+    else if(!ln.trim()){ flush(); i++; }
+    else { para.push(ln); i++; }
+  }
+  flush();
+  return out.join('\n');
+}
+
+// ---- drawer search filter ----
+var FILTER='';
+function idNum(id){var m=/(\d+)/.exec(id||'');return m?parseInt(m[1],10):0;}
+function matchFilter(a){
+  if(!FILTER) return true;
+  var hay=[a.section||'',(a.selector&&a.selector.exact)||''];
+  (a.turns||[]).forEach(function(t){hay.push(t.prompt||'');hay.push(t.answer||'');});
+  return hay.join('\n').toLowerCase().indexOf(FILTER)>=0;
+}
 
 // ---- text model of the iframe doc (nodes + raw concatenation) ----
 function collectText(doc){
@@ -337,14 +473,17 @@ function buildAnchor(range){
 // ---- highlight painting (CSS Custom Highlight API, non-destructive) ----
 var FALLBACK_WARNED=false;
 function paint(activeId){
+  var open=document.body.classList.contains('mzk-open');
   if(iwin&&iwin.CSS&&iwin.CSS.highlights&&iwin.Highlight){
     iwin.CSS.highlights.delete('mzk'); iwin.CSS.highlights.delete('mzk-active');
+    if(!open) return;                       // drawer closed → no highlights, for a clean read
     var reg=[],act=[];
     RANGES.forEach(function(r,id){(id===activeId?act:reg).push(r);});
     if(reg.length) iwin.CSS.highlights.set('mzk',newHL(reg));
     if(act.length) iwin.CSS.highlights.set('mzk-active',newHL(act));
     return;
   }
+  if(!open) return;                         // fallback path: don't add <mark>s when closed
   if(!FALLBACK_WARNED){FALLBACK_WARNED=true;
     console.warn('[annotate] CSS Custom Highlight API unavailable — falling back to <mark> wrapping (degraded).');}
   RANGES.forEach(function(r){try{var m=idoc.createElement('mark');m.style.background='rgba(245,197,24,.45)';r.surroundContents(m);}catch(e){}});
@@ -360,7 +499,14 @@ function anchorAll(){
     if(a.status==='dismissed') return;
     var r=findRange(idoc,a);
     if(r) RANGES.set(a.id,r);
-    else if(a.status==='pending') orphans.push(a.id);
+    else if(a.status==='pending'){
+      // Only orphan a FRESH pending item whose quote can't be found — a genuine
+      // re-render casualty. A follow-up on a thread that was already answered stays
+      // reachable (a live question outranks a shifted anchor), so it isn't evicted
+      // from the [pending] drain trigger.
+      var answeredBefore=(a.turns||[]).some(function(t){return t.answer;});
+      if(!answeredBefore) orphans.push(a.id);
+    }
   });
   paint();
   renderDrawer();
@@ -369,29 +515,67 @@ function anchorAll(){
 
 // ---- drawer ----
 function renderDrawer(){
-  var items=DATA.items.slice().sort(function(a,b){
-    var o={pending:0,orphaned:1,answered:2,distilled:3,dismissed:4};
-    return (o[a.status]||9)-(o[b.status]||9);});
+  var RANK={pending:0,orphaned:1,answered:2,distilled:3,dismissed:4};
+  var rank=function(s){return s in RANK?RANK[s]:9;};   // NB: not `RANK[s]||9` — pending is 0 (falsy)
+  var all=DATA.items.slice().sort(function(a,b){
+    return (rank(a.status)-rank(b.status))||(idNum(b.id)-idNum(a.id));});   // status group, then newest first
   var pending=DATA.items.filter(function(a){return a.status==='pending';}).length;
-  countEl.textContent=pending+' pending'+(DATA.items.length?(' · '+DATA.items.length+' total'):'');
-  if(!items.length){listEl.innerHTML='<div class=mzk-empty>No annotations yet.<br>Select text in the report to add one.</div>';return;}
+  var items=all.filter(matchFilter);
+  var base=pending+' pending'+(DATA.items.length?(' · '+DATA.items.length+' total'):'');
+  countEl.textContent=FILTER?(items.length+' shown · '+base):base;
+  if(!all.length){listEl.innerHTML='<div class=mzk-empty>No annotations yet.<br>Select text in the report to add one.</div>';return;}
+  if(!items.length){listEl.innerHTML='<div class=mzk-empty>Nothing matches “'+esc(FILTER)+'”.</div>';return;}
   listEl.innerHTML='';
   items.forEach(function(a){
-    var sel=a.selector||{};
+    var sel=a.selector||{}, raw=RAW.has(a.id);
     var card=document.createElement('div');card.className='mzk-card';card.dataset.id=a.id;
     var html='<div class=sec><span class="mzk-chip '+a.status+'">'+esc(a.status)+'</span> &nbsp;'+esc(_label(a))+'</div>';
-    if(a.scope==='selection'&&sel.exact) html+='<blockquote>'+esc(sel.exact)+'</blockquote>';
-    html+='<div class=prompt>'+esc(a.prompt||'(no prompt)')+'</div>';
-    if(a.answer) html+='<div class=agent>'+esc(a.answer)+'</div>';
+    if(raw){
+      html+='<pre class=mzk-raw>'+esc(RAWTEXT[a.id]||'loading…')+'</pre>';
+    } else {
+      if(a.scope==='selection'&&sel.exact) html+='<blockquote>'+esc(sel.exact)+'</blockquote>';
+      (a.turns||[]).forEach(function(t){
+        html+='<div class=prompt>'+esc(t.prompt||'(no prompt)')+'</div>';
+        if(t.answer) html+='<div class=agent>'+mdToHtml(t.answer)+'</div>';
+      });
+    }
     html+='<div class=mzk-rowbtns>'
       +'<button data-act=resolve>Resolve</button>'
       +'<button data-act=dismiss>Dismiss</button>'
       +'<button data-act=reopen>Reopen</button>'
+      +'<button data-act=raw>'+(raw?'View rendered':'View raw')+'</button>'
       +'<button data-act=delete>Delete</button></div>';
+    if(!raw && a.status!=='dismissed')
+      html+='<div class=mzk-follow>'
+        +'<textarea rows=2 placeholder="Ask a follow-up on this passage…"></textarea>'
+        +'<button data-act=followup class=primary>Ask follow-up</button></div>';
     card.innerHTML=html;
     card.addEventListener('click',function(e){
+      var lnk=e.target&&e.target.closest?e.target.closest('a'):null;
+      if(lnk){
+        if(lnk.dataset&&lnk.dataset.note){   // note link → open in the report pane (fresh nav)
+          e.preventDefault();e.stopPropagation();
+          NAV=[];CURNOTE=null;showNote(lnk.dataset.note);}
+        return;                              // web link → normal navigation; either way, don't focus
+      }
       var act=e.target&&e.target.dataset?e.target.dataset.act:null;
+      if(act==='followup'){
+        e.stopPropagation();
+        var ta=card.querySelector('.mzk-follow textarea');
+        var v=ta&&ta.value.trim();
+        if(!v){if(ta)ta.focus();return;}
+        api('POST','/annotations/followup',{id:a.id,prompt:v}).then(reload);
+        return;
+      }
+      if(act==='raw'){                       // toggle raw markdown ⇄ rendered for this card
+        e.stopPropagation();
+        if(RAW.has(a.id)){RAW.delete(a.id);renderDrawer();}
+        else fetch('/annotations/raw/'+encodeURIComponent(a.id)).then(function(r){return r.text();})
+          .then(function(t){RAWTEXT[a.id]=t;RAW.add(a.id);renderDrawer();}).catch(function(){});
+        return;
+      }
       if(act){e.stopPropagation();rowAction(a.id,act);return;}
+      if(e.target&&e.target.tagName==='TEXTAREA') return;   // typing a follow-up, don't scroll
       focusAnnotation(a.id);
     });
     listEl.appendChild(card);
@@ -474,7 +658,28 @@ function flush(){
     document.body.appendChild(m);
   });
 }
-function toggleDrawer(){document.body.classList.toggle('mzk-open');}
+function toggleDrawer(){document.body.classList.toggle('mzk-open');paint();}
+
+// ---- in-pane note viewer (renders a note over the report; its wikilinks drill deeper) ----
+function renderView(){
+  var body=document.getElementById('mzk-view-body');
+  body.innerHTML=VIEWRAW?('<pre class=mzk-raw>'+esc(CURMD)+'</pre>'):mdDoc(CURMD);
+  body.scrollTop=0;
+  document.getElementById('mzk-view-raw').textContent=VIEWRAW?'View rendered':'View raw';
+}
+function showNote(stem,push){
+  fetch('/note/'+encodeURIComponent(stem)).then(function(r){if(!r.ok)throw 0;return r.text();}).then(function(md){
+    if(push!==false && CURNOTE) NAV.push(CURNOTE);
+    CURNOTE=stem; CURMD=md; VIEWRAW=false;   // new note always opens rendered (so its links work)
+    renderView();
+    document.getElementById('mzk-view-title').textContent=stem;
+    document.getElementById('mzk-view-back').style.visibility=NAV.length?'visible':'hidden';
+    document.body.classList.add('mzk-viewing');
+  }).catch(function(){});
+}
+function toggleViewRaw(){VIEWRAW=!VIEWRAW;renderView();}
+function closeNote(){document.body.classList.remove('mzk-viewing');NAV=[];CURNOTE=null;}
+function backNote(){ if(NAV.length) showNote(NAV.pop(),false); else closeNote(); }
 
 // ---- boot ----
 function reload(){return api('GET','/annotations').then(function(d){DATA=d;anchorAll();});}
@@ -490,6 +695,30 @@ function iframeReady(){
 document.getElementById('mzk-doc').onclick=docPrompt;
 document.getElementById('mzk-flush').onclick=flush;
 document.getElementById('mzk-toggle').onclick=toggleDrawer;
+var qEl=document.getElementById('mzk-q');
+if(qEl) qEl.addEventListener('input',function(){FILTER=qEl.value.trim().toLowerCase();renderDrawer();});
+// resizable drawer: drag the grip on the seam; width persists across reloads
+try{var sw=localStorage.getItem('mzk-drawer-w'); if(sw) document.documentElement.style.setProperty('--drawer-w',sw);}catch(e){}
+var grip=document.getElementById('mzk-grip'), dragging=false;
+if(grip){
+  grip.addEventListener('mousedown',function(e){e.preventDefault();dragging=true;grip.classList.add('mzk-drag');
+    document.body.style.userSelect='none';iframe.style.pointerEvents='none';});   // let the parent see mousemove over the iframe
+  window.addEventListener('mousemove',function(e){
+    if(!dragging)return;
+    var w=Math.max(260,Math.min(window.innerWidth-e.clientX,Math.round(window.innerWidth*0.72)));
+    document.documentElement.style.setProperty('--drawer-w',w+'px');});
+  window.addEventListener('mouseup',function(){
+    if(!dragging)return; dragging=false;grip.classList.remove('mzk-drag');
+    document.body.style.userSelect='';iframe.style.pointerEvents='';
+    try{localStorage.setItem('mzk-drawer-w',document.documentElement.style.getPropertyValue('--drawer-w'));}catch(e){}});
+}
+document.getElementById('mzk-view-report').onclick=closeNote;
+document.getElementById('mzk-view-back').onclick=backNote;
+document.getElementById('mzk-view-raw').onclick=toggleViewRaw;
+document.getElementById('mzk-view-body').addEventListener('click',function(e){
+  var lnk=e.target&&e.target.closest?e.target.closest('a'):null;
+  if(lnk&&lnk.dataset&&lnk.dataset.note){e.preventDefault();showNote(lnk.dataset.note);}   // drill into the linked note
+});
 document.body.classList.add('mzk-open');
 window.addEventListener('resize',hideFloat);
 iframe.addEventListener('load',iframeReady);
@@ -513,7 +742,20 @@ reload();
 """
 
 
-def render_page(title: str) -> str:
+def note_index(root: Path) -> dict:
+    """Map wikilink stem -> repo-relative note path, so `[[links]]` in answers can render
+    as real anchors. Stems are unique across pages/journals/sources (AGENTS rule 1); if a
+    stem somehow appears twice, pages/ wins (globbed first, setdefault keeps the first)."""
+    idx = {}
+    for sub in ("pages", "journals", "sources"):
+        d = root / sub
+        if d.is_dir():
+            for p in sorted(d.glob("*.md")):
+                idx.setdefault(p.stem, "%s/%s" % (sub, p.name))
+    return idx
+
+
+def render_page(title: str, root: Path) -> str:
     body = (
         '<div id=mzk-bar>'
         '<span id=mzk-title>%s</span>'
@@ -524,9 +766,24 @@ def render_page(title: str) -> str:
         '<button id=mzk-toggle>Annotations</button>'
         '</div>'
         '<iframe id=mzk-report src="/report"></iframe>'
-        '<aside id=mzk-drawer><div id=mzk-list></div></aside>'
+        '<div id=mzk-view>'
+        '<div id=mzk-view-bar>'
+        '<button id=mzk-view-report>&larr; Report</button>'
+        '<button id=mzk-view-back>&larr; Back</button>'
+        '<span id=mzk-view-title></span>'
+        '<span class=mzk-spacer></span>'
+        '<button id=mzk-view-raw>View raw</button>'
+        '</div>'
+        '<div id=mzk-view-body></div>'
+        '</div>'
+        '<aside id=mzk-drawer>'
+        '<div id=mzk-search><input id=mzk-q type=search autocomplete=off '
+        'placeholder="Search annotations…"></div>'
+        '<div id=mzk-list></div></aside>'
+        '<div id=mzk-grip title="Drag to resize"></div>'
     ) % _html_escape(title)
-    js = ANNOT_JS.replace("IFRAME_STYLE_TEXT", json.dumps(IFRAME_STYLE))
+    js = (ANNOT_JS.replace("IFRAME_STYLE_TEXT", json.dumps(IFRAME_STYLE))
+                  .replace("NOTES_JSON", json.dumps(note_index(root))))
     return (
         "<!doctype html>\n<html lang=en>\n<head>\n<meta charset=utf-8>\n"
         "<meta name=viewport content='width=device-width,initial-scale=1'>\n"
@@ -591,9 +848,24 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/":
-            self._send(200, render_page(report_title(self.html_path)), "text/html; charset=utf-8")
+            self._send(200, render_page(report_title(self.html_path), self.root), "text/html; charset=utf-8")
         elif path == "/report":
             self._send(200, self.html_path.read_bytes(), "text/html; charset=utf-8")
+        elif path.startswith("/note/"):
+            # peek a linked note (raw markdown, new tab) — resolved strictly through the
+            # note index, so only real note stems are servable (no path traversal)
+            rel = note_index(self.root).get(unquote(path[len("/note/"):]))
+            if rel:
+                self._send(200, (self.root / rel).read_bytes(), "text/plain; charset=utf-8")
+            else:
+                self._send(404, b"unknown note", "text/plain")
+        elif path.startswith("/annotations/raw/"):
+            text = self.ann_path.read_text(encoding="utf-8") if self.ann_path.exists() else ""
+            block = raw_entry(text, unquote(path[len("/annotations/raw/"):]))
+            if block:
+                self._send(200, block, "text/plain; charset=utf-8")
+            else:
+                self._send(404, b"unknown annotation", "text/plain")
         elif path == "/annotations":
             meta, items = load_annotations(self.ann_path)
             self._json({"meta": meta, "items": items})
@@ -608,6 +880,8 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         if path == "/annotations":
             self._upsert()
+        elif path == "/annotations/followup":
+            self._followup()
         elif path == "/annotations/delete":
             self._delete()
         elif path == "/annotations/flush":
@@ -648,6 +922,32 @@ class Handler(BaseHTTPRequestHandler):
                 items.append(rec)
             dump_annotations(self.ann_path, meta, items)
         self._json(rec)
+
+    def _followup(self):
+        # Append a new conversation turn to an existing annotation and re-open it to
+        # `pending` — a new unanswered turn — so it re-enters the drain loop (the
+        # emit-on-rise pending-count watcher fires). The drain fills the open turn.
+        data = self._read_json()
+        tid = data.get("id")
+        prompt = (data.get("prompt") or "").strip()
+        if not tid or not prompt:
+            self._json({"ok": False, "error": "id and non-empty prompt required"}, 400)
+            return
+        rec = None
+        with self.lock:
+            meta, items = load_annotations(self.ann_path)
+            for a in items:
+                if a.get("id") == tid:
+                    a.setdefault("turns", []).append({"prompt": prompt, "answer": None})
+                    a["status"] = "pending"
+                    rec = a
+                    break
+            if rec is not None:
+                dump_annotations(self.ann_path, meta or self._fresh_meta(), items)
+        if rec is None:
+            self._json({"ok": False, "error": "unknown id: %s" % tid}, 404)
+        else:
+            self._json(rec)
 
     def _delete(self):
         tid = self._read_json().get("id")
@@ -731,22 +1031,34 @@ def cmd_serve(root: Path, html: str, port: int, browser: str) -> int:
     return 0
 
 
-def cmd_list(root: Path, html: str) -> int:
+def cmd_list(root: Path, html: str, status: str = None) -> int:
+    """Print the annotation queue. `status` filters to one lifecycle state — e.g.
+    `--status pending` dumps only open items, so a drain reads just the working set
+    (its token cost scales with active work, not total history)."""
     ann = annotations_path(Path(html).resolve(), root)
     if not ann.exists():
         print("no annotations yet: %s" % ann)
         return 0
     _, items = load_annotations(ann)
+    if status:
+        items = [a for a in items if a.get("status") == status]
     for a in sorted(items, key=lambda a: STATUS_ORDER.get(a["status"], 9)):
-        print("[%s] %s  %s" % (a["status"], a["id"], _label(a)))
+        turns = a.get("turns") or []
+        unans = sum(1 for t in turns if not t.get("answer"))
+        print("[%s] %s  %s  (%d turn%s%s)" % (
+            a["status"], a["id"], _label(a), len(turns),
+            "" if len(turns) == 1 else "s",
+            ", %d unanswered" % unans if unans else ""))
         sel = a.get("selector") or {}
         if sel.get("exact"):
             print("    “%s”" % sel["exact"][:90])
-        if a.get("prompt"):
-            print("    prompt: %s" % a["prompt"][:200].replace("\n", " "))
-        if a.get("answer"):
-            print("    agent:  %s" % a["answer"][:200].replace("\n", " "))
-    print("\n%d annotation(s) — %s" % (len(items), ann))
+        for j, t in enumerate(turns, 1):
+            if t.get("prompt"):
+                print("    %d. prompt: %s" % (j, t["prompt"][:200].replace("\n", " ")))
+            if t.get("answer"):
+                print("       agent:  %s" % t["answer"][:200].replace("\n", " "))
+    label = "%d %s annotation(s)" % (len(items), status) if status else "%d annotation(s)" % len(items)
+    print("\n%s — %s" % (label, ann))
     return 0
 
 
@@ -760,12 +1072,14 @@ def cmd_list(root: Path, html: str) -> int:
 
 MCP_TOOLS = [
     {"name": "list_annotations",
-     "description": "List annotations on the served report (status, section, quoted text, prompt).",
+     "description": "List annotations on the served report (status, section, quoted text, "
+                    "opening prompt, and turn/unanswered counts).",
      "inputSchema": {"type": "object", "properties": {
          "status": {"type": "string",
                     "description": "optional filter: pending|answered|distilled|orphaned|dismissed"}}}},
     {"name": "get_annotation",
-     "description": "Get one annotation by id, including its text-quote anchor and any agent answer.",
+     "description": "Get one annotation by id, including its text-quote anchor and the "
+                    "full conversation thread (turns, each a prompt + optional agent answer).",
      "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}},
                      "required": ["id"]}},
 ]
@@ -788,9 +1102,13 @@ def _mcp_content(obj, is_error=False):
 
 def _mcp_view(a):
     sel = a.get("selector") or {}
+    turns = a.get("turns") or []
     return {"id": a["id"], "status": a["status"], "scope": a.get("scope"),
             "section": a.get("section"), "quote": sel.get("exact"),
-            "prompt": a.get("prompt"), "answered": bool(a.get("answer"))}
+            "prompt": (turns[0]["prompt"] if turns else ""),
+            "turns": len(turns),
+            "unanswered": sum(1 for t in turns if not t.get("answer")),
+            "answered": bool(turns) and all(t.get("answer") for t in turns)}
 
 
 def _latest_annotations(root: Path):
@@ -813,7 +1131,7 @@ def cmd_mcp(root: Path, html=None) -> int:
         if method == "initialize":
             return _rpc_ok(mid, {"protocolVersion": params.get("protocolVersion", "2025-06-18"),
                                  "capabilities": {"tools": {}},
-                                 "serverInfo": {"name": "annotate", "version": "1"}})
+                                 "serverInfo": {"name": "annotate", "version": "2"}})
         if method in ("notifications/initialized", "initialized") or method is None:
             return None                              # a notification / a response — no reply
         if method == "ping":
@@ -884,11 +1202,13 @@ def main() -> int:
     p_serve.add_argument("--open", action="store_true", help="open a browser even on a remote/VM")
     p_list = sub.add_parser("list")
     p_list.add_argument("html")
+    p_list.add_argument("--status", default=None,
+                        help="only show this status (pending|answered|distilled|orphaned|dismissed)")
     p_mcp = sub.add_parser("mcp")
     p_mcp.add_argument("html", nargs="?", default=None)
     args = ap.parse_args(argv)
     if args.cmd == "list":
-        return cmd_list(args.root, args.html)
+        return cmd_list(args.root, args.html, args.status)
     if args.cmd == "mcp":
         return cmd_mcp(args.root, args.html)
     browser = "no" if args.no_browser else ("force" if args.open else "auto")

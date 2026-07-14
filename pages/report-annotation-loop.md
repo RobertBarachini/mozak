@@ -34,10 +34,12 @@ here (AGENTS rule 9).
 `_generated/presentations/<slug>/annotations.md` — one Markdown file that sits beside
 the render and is gitignored and disposable exactly like it (the AGENTS `_generated/`
 layout row). Each entry is a `## N. [status] <label>` heading, an optional `> quote`
-blockquote, a `**Prompt:**`, an optional `**Agent:**` reply, and a fenced JSON block.
-Authority is split so nothing drifts: **status** lives only in the heading token; the
-**fenced JSON** owns the machine anchor; the **prose** owns the prompt and the agent's
-answer.
+blockquote, then a **conversation thread** — one or more `**Prompt:**` / `**Agent:**`
+pairs in order — and a fenced JSON block. A trailing `**Prompt:**` with no following
+`**Agent:**` is an *open turn*: it means the entry is `[pending]` (a reader added a
+follow-up that hasn't been answered yet). A single prompt+answer is just the one-turn
+case. Authority is split so nothing drifts: **status** lives only in the heading token;
+the **fenced JSON** owns the machine anchor; the **prose** owns the conversation turns.
 
 The anchor is a text-quote selector (the quoted `exact` text plus short `prefix`/
 `suffix` context and the nearest heading), not a line offset — so it re-attaches by
@@ -51,8 +53,10 @@ loudly in the drawer, never silently dropped); `dismissed`.
 Draining `annotations.md` is a mini-ingestion pass; it names no provider or model, so
 any harness runs it identically:
 
-1. **Read** the `[pending]` entries straight from the file — the capture server need
-   not be running.
+1. **Read** the `[pending]` entries — fetch just that slice, not the whole file, so the
+   pass's token cost scales with open work, not total history (`annotate.py list --status
+   pending`, the MCP `list_annotations status=pending`, or a `grep`). The capture server
+   need not be running.
 2. **Work** each prompt (answer, verify a claim, expand a passage, find a
    contradiction) under the usual discipline: scope the effort by [[search-gates]], and
    on any conflict follow [[claim-level-provenance]] (contested first, adversarial both
@@ -60,12 +64,23 @@ any harness runs it identically:
 3. **Distill** durable results into `pages/` under the admission test (AGENTS rule 5,
    [[store-the-delta]]), with contextual links (rule 4) and claim anchors (rule 8) —
    never leave an insight only in the disposable `annotations.md`.
-4. **Record back**: flip the heading status and append an `**Agent:**` line that
-   wikilinks the notes touched, so the file becomes a ledger of what was addressed.
+4. **Record back**: append the `**Agent:**` line *immediately after the open
+   `**Prompt:**`* it answers (so the pair folds correctly), wikilinking the notes touched;
+   flip the heading status to `[answered]`/`[distilled]` only once **no open turn remains**
+   (a multi-turn thread with a later unanswered follow-up stays `[pending]`). The file
+   becomes a ledger of the whole conversation, not just the last exchange.
 5. **Journal** the pass, naming the notes — the same render-provenance rule that lets a
    disposable render be discarded safely ([[research-flow]], "Synthesizing outward").
 6. **Optionally re-render** from the now-richer graph; reopening the tool re-anchors
-   surviving annotations by quote and flags any casualties as `orphaned`.
+   surviving annotations by quote and flags any casualties as `orphaned`. **Re-render vs.
+   edit in place:** re-rendering is the default — the render is disposable and regenerable
+   from the graph, so there is nothing to "back up" (the graph is the source of truth). A
+   *surgical inline edit* of the render is safe too, as long as it does not alter any
+   quoted `exact` span: anchoring keys on the quoted text plus its `prefix`/`suffix`, so
+   edits elsewhere leave anchors intact, and it degrades gracefully when nearby (not
+   quoted) text moves. If you must change a quoted passage, expect that annotation to
+   `orphan` and re-anchor/update it — the reopen→reload→orphan-detection surfaces the
+   breakage loudly rather than silently dropping it.
 7. **Check** (AGENTS rule 7): only the `pages/` and `journals/` edits are tracked — the
    render and `annotations.md` are gitignored — then the human commits.
 

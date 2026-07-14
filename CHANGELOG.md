@@ -14,6 +14,42 @@ in its own journal.
 
 Newest first.
 
+## 2026-07-14
+
+- **`annotate.py` — threaded conversations per annotation (schema `annotate/1` → `annotate/2`).**
+  An annotation is now a **thread**: one or more `**Prompt:**` / `**Agent:**` pairs in the
+  prose (greppable, hand-editable, backward-compatible — an old single pair reads as one
+  turn). A trailing unanswered `**Prompt:**` ⟺ `[pending]`. New `POST /annotations/followup`
+  appends a turn from the drawer and **re-opens the entry to `pending`**, so a follow-up
+  auto-re-enters the drain loop (the emit-on-rise watcher fires) and gets answered in place
+  with no re-prompting. Parser (`_turns`), serializer, `_mcp_view`, and `cmd_list` all move
+  to turns; the drain contract's "Record back" step is updated (append the `**Agent:**`
+  after the open prompt; flip the heading only when no open turn remains).
+- **Agent answers render as Markdown** in the drawer (a small self-contained renderer —
+  bold/italic/code/links/lists), escaped-first for safety. `[[wikilinks]]` render as real,
+  copyable note links with a 📝 marker; web links open in a new tab.
+- **In-pane note viewer.** Clicking a `[[note]]` opens it **rendered in the report pane**
+  (block-level Markdown: headings/lists/quotes/code + inline), with a **← Report / ← Back**
+  bar; the note's own wikilinks drill deeper (back-stack). A **View raw ⇄ View rendered**
+  toggle shows the note source. Backed by a new **`GET /note/<stem>`** route that serves a
+  note resolved strictly through a stem→path index (`note_index`, globbing
+  `pages/ journals/ sources/`) — 127.0.0.1-only, no path traversal.
+- **Filtered reads — `list --status <state>`** (and the drain contract now says read the
+  `[pending]` slice, not the whole file), so a drain's token cost scales with open work, not
+  total history. MCP `list_annotations status=` already filtered.
+- **Drawer polish:** live **search/filter** box (matches section/quote/prompts/answers);
+  **newest-first** ordering within status groups; **per-card View raw ⇄ View rendered**
+  toggle (`GET /annotations/raw/<id>`); a **resizable** drawer (drag the seam, width
+  persisted in `localStorage`); toggling the drawer now **also toggles the report
+  highlights** for a clean read; user prompts get a distinct left-border accent.
+- **Fixes:** drawer sort dropped pending to the bottom via a falsy-`0` bug (`o[s]||9` where
+  `pending`=0); clicks on links inside answers were swallowed by the card's focus handler;
+  the note viewer preserved hard-wrap source newlines as `<br>` (now soft-wrapped per
+  Markdown); justified text in the viewer (not the narrow drawer).
+- Rationale: a render was answerable one-shot; now it's a **threaded, searchable,
+  navigable** reading surface — and the graph became browsable from inside an annotation —
+  while the seam stays a plain gitignored `annotations.md` any harness can drain.
+
 ## 2026-07-13 (later)
 
 - **`annotate.py` serve now live-refreshes — answers land in an open render without a
