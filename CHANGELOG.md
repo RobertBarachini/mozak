@@ -14,6 +14,21 @@ in its own journal.
 
 Newest first.
 
+## 2026-08-02
+
+- **Personal documents get a home: `.personal-shared/`, fronted by `medium: document`.**
+  Upstreamed from an instance that needed to ingest a signed contract: a primary document
+  the graph reasons *from* fitted no source `medium`, and no zone could hold its verbatim
+  text (`archive/` is tracked git — wrong for a lease or a letter; `.private/` is
+  agent-unreadable; `raw/` is transient). Two coordinated changes: the schema gains
+  `medium: document` (contract, letter, invoice, official decision — the note fronts it;
+  the verbatim text lives in `archive/`, or in `.personal-shared/` when the document is
+  too personal to track) with the `url` exemption widened to match (such documents have
+  no public address); and the AGENTS `.personal-shared/` layout row now names personal
+  **documents** alongside personal facts — held untracked, fronted by a thin `sources/`
+  capture that carries the analysis, not the specifics, so the tracked graph survives
+  its documents.
+
 ## 2026-07-14 (later)
 
 - **`annotate.py` — a transient `processing` status.** Between `pending` and

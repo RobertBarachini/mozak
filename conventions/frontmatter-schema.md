@@ -28,8 +28,8 @@ live in bodies.
 
 | Field | Req | Value |
 |---|---|---|
-| `url` | yes* | Canonical URL. *Omit for internal agent-generated research (e.g. a deep-research run) — provenance then lives in the body (run id, script, artifact paths). |
-| `medium` | yes | `video` \| `article` \| `paper` \| `forum` \| `book` \| `podcast` \| `report` (agent-generated research reports / internal runs) |
+| `url` | yes* | Canonical URL. *Omit when the capture has no public address: internal agent-generated research (e.g. a deep-research run) or a `medium: document` private primary document — provenance then lives in the body (run id, script, artifact paths; or issuer, date, `archive/` path). |
+| `medium` | yes | `video` \| `article` \| `paper` \| `forum` \| `book` \| `podcast` \| `report` (agent-generated research reports / internal runs) \| `document` (a primary document the graph reasons *from* — contract, letter, invoice, official decision; the note fronts it, the verbatim text lives in `archive/`, or in `.personal-shared/` when the document is too personal to track) |
 | `author` | no | Creator/channel |
 | `published` | no | `YYYY-MM-DD` if known |
 | `retrieved` | yes | `YYYY-MM-DD` the capture was made |
