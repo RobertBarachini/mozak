@@ -14,6 +14,20 @@ in its own journal.
 
 Newest first.
 
+## 2026-08-05
+
+- **README facelift — logo, badges, quick-nav.** The template README now opens with a
+  centered logo, a tagline, static shields.io badges (license, plain-Markdown,
+  derived-backlinks, stdlib-only), and in-page navigation links; sections gained emoji
+  headers and the design-provenance paragraph became a blockquote. **Content unchanged** —
+  same prose, same claims. The logo lives at `assets/mozak.png`, which per the `assets/`
+  contract is **gitignored**: a fresh clone (and a GitHub render) shows a broken image
+  until restored from backup — the accepted "notes survive their images" tradeoff. If the
+  template is ever published where the logo must render, track it explicitly (a narrow
+  `!assets/mozak.png` gitignore exception) as a separate, conscious contract change.
+  Badges are external images (shields.io) — they render on GitHub, not offline; they carry
+  no repo content.
+
 ## 2026-08-02
 
 - **Personal documents get a home: `.personal-shared/`, fronted by `medium: document`.**

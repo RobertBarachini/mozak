@@ -1,4 +1,25 @@
+<div align="center">
+
+<img src="assets/mozak.png" alt="mozak logo — a circuit-maze brain" width="420">
+
 # mozak
+
+**Agent-maintained, program-agnostic knowledge graphs.**
+
+*Plain Markdown is the single source of truth — every tool is a replaceable lens.*
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Source of truth](https://img.shields.io/badge/source_of_truth-plain_Markdown-ec4899.svg)](AGENTS.md)
+[![Backlinks](https://img.shields.io/badge/backlinks-derived%2C_never_stored-9f2b68.svg)](AGENTS.md)
+[![Tooling](https://img.shields.io/badge/tooling-stdlib_only-black.svg)](tools/)
+
+[Start an instance](#-start-an-instance) ·
+[Orientation](#-orientation) ·
+[Why](#-why)
+
+</div>
+
+---
 
 *Mozak* ("brain") — a **template for agent-maintained, program-agnostic knowledge
 graphs**. Plain Markdown is the single source of truth; every tool (Claude Code,
@@ -13,7 +34,7 @@ tooling, and the meta-domain pages that document the system. Living **instances*
 updates down and upstreaming generalizable improvements — per the contract in
 [SYNC.md](SYNC.md).
 
-## Start an instance
+## 🚀 Start an instance
 
 ```bash
 git clone <this-repo> mybrain && cd mybrain
@@ -24,21 +45,21 @@ python3 tools/graph.py check          # smoke test: 0 broken links, exit 0
 Then follow [SETUP.md](SETUP.md) (viewers, optional MCP, ingestion toolchain) and
 write your instance's first journal entry.
 
-## Orientation
+## 🧭 Orientation
 
 | Who | Where |
 |---|---|
-| Humans | [pages/start-here.md](pages/start-here.md) — the root map of content |
-| Agents | [AGENTS.md](AGENTS.md) — the constitution (Claude Code loads it via [CLAUDE.md](CLAUDE.md)) |
-| Ops | [SETUP.md](SETUP.md) · [SYNC.md](SYNC.md) · [CHANGELOG.md](CHANGELOG.md) |
-| Why it's shaped this way | the meta pages: design rationale, lineage, research flow |
+| 🧑 Humans | [pages/start-here.md](pages/start-here.md) — the root map of content |
+| 🤖 Agents | [AGENTS.md](AGENTS.md) — the constitution (Claude Code loads it via [CLAUDE.md](CLAUDE.md)) |
+| 🔧 Ops | [SETUP.md](SETUP.md) · [SYNC.md](SYNC.md) · [CHANGELOG.md](CHANGELOG.md) |
+| 🤔 Why it's shaped this way | the meta pages: design rationale, lineage, research flow |
 
-Designed 2026-07 from an adversarially-verified deep-research run over the
-agentic-PKM landscape (MCP servers, evergreen notes/Zettelkasten/digital-garden
-methodology, Logseq-vs-Obsidian authoring tradeoffs); the rationale lives in-graph
-under the `meta` domain.
+> Designed 2026-07 from an adversarially-verified deep-research run over the
+> agentic-PKM landscape (MCP servers, evergreen notes/Zettelkasten/digital-garden
+> methodology, Logseq-vs-Obsidian authoring tradeoffs); the rationale lives in-graph
+> under the `meta` domain.
 
-## Why
+## 🧠 Why
 
 I've always wanted to systematically gather, organize, categorize, and retrieve
 knowledge. After years of research, abstraction-building, and trial and error, I
