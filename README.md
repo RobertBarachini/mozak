@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/mozak.png" alt="mozak logo — a circuit-maze brain" width="420">
+<img src=".github/mozak.png" alt="mozak logo — a circuit-maze brain" width="420">
 
 # mozak
 

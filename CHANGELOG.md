@@ -16,15 +16,19 @@ Newest first.
 
 ## 2026-08-05
 
+- **Logo re-homed to `.github/mozak.png` — a tracked path — so it renders on GitHub.**
+  Follow-up to the facelift below: `assets/` is gitignored by contract, so the logo would
+  have shown broken on any push/clone. Rather than carve a gitignore exception into the
+  `assets/` contract, the image moved to `.github/` — already template-owned and tracked
+  (SYNC Ownership table), and the de facto GitHub home for README imagery; repo machinery,
+  not graph content, so the binary store's rules don't apply. Downscaled 1080→840 px
+  (2× its 420 px display width), 312K→188K, to respect append-only history.
+
 - **README facelift — logo, badges, quick-nav.** The template README now opens with a
   centered logo, a tagline, static shields.io badges (license, plain-Markdown,
   derived-backlinks, stdlib-only), and in-page navigation links; sections gained emoji
   headers and the design-provenance paragraph became a blockquote. **Content unchanged** —
-  same prose, same claims. The logo lives at `assets/mozak.png`, which per the `assets/`
-  contract is **gitignored**: a fresh clone (and a GitHub render) shows a broken image
-  until restored from backup — the accepted "notes survive their images" tradeoff. If the
-  template is ever published where the logo must render, track it explicitly (a narrow
-  `!assets/mozak.png` gitignore exception) as a separate, conscious contract change.
+  same prose, same claims.
   Badges are external images (shields.io) — they render on GitHub, not offline; they carry
   no repo content.
 
