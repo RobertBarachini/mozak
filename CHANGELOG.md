@@ -14,7 +14,26 @@ in its own journal.
 
 Newest first.
 
-## 2026-08-05
+## 2026-08-06
+
+- **README gains "🔬 One loop, end to end" — a worked example between Orientation and
+  Why.** An 8-step walkthrough of one real research loop (scope by stakes → five-angle
+  sweep → per-claim adversarial verification with a triple-lens pass on the
+  highest-stakes angle → a 2-vs-1 lens split resolved by adversarially searching both
+  sides, dissent kept as negative knowledge → distill/link → local render → annotation
+  loop → distill-back), each step pointing at the meta page that owns the convention
+  (rule 9: the section shows, the pages define). The trace is a real instance run
+  **generalized per the SYNC privacy boundary**: no country/tax specifics, no amounts,
+  no broker names, no instance note stems; counts (5 captures, 64 claims, 78 verdicts,
+  25 notes, 14 annotations/18 exchanges, 2 distilled) are safe aggregates. Three
+  owner-captured screenshots of the live loop ship in `.github/` (template-owned):
+  the served render + drawer, the all-in-one VS Code view, and the in-pane note
+  viewer. The screenshots show the real briefing and were **explicitly authorized by
+  the owner** — the visible content (jurisdiction label, worked bps examples) is the
+  owner's accepted disclosure, not covered by the prose generalization; a `[!NOTE]`
+  callout under the screenshots marks them as a dated method sample — not financial
+  advice, amounts illustrative — since rule 8 corrects notes but cannot reach pixels
+  frozen in append-only history. Quick-nav line gained the section's anchor.
 
 - **Logo re-homed to `.github/mozak.png` — a tracked path — so it renders on GitHub.**
   Follow-up to the facelift below: `assets/` is gitignored by contract, so the logo would
