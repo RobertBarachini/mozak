@@ -16,6 +16,13 @@ Newest first.
 
 ## 2026-08-06
 
+- **README polish (owner additions, reworded):** the agent-bootstrap line under *Start
+  an instance* became a `[!TIP]` callout, and the *Why* section's provenance sentence
+  now links the owner's master's thesis in Markdown and states concretely what it
+  tested (news mining of the chip shortage, iterative search-term expansion,
+  occurrence trends as early-warning signals, LLMs proposed as the analysts) —
+  replacing a nested-parentheses run-on with a bare URL.
+
 - **README gains "🔬 One loop, end to end" — a worked example between Orientation and
   Why.** An 8-step walkthrough of one real research loop (scope by stakes → five-angle
   sweep → per-claim adversarial verification with a triple-lens pass on the

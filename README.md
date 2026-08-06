@@ -46,6 +46,10 @@ python3 tools/graph.py check          # smoke test: 0 broken links, exit 0
 Then follow [SETUP.md](SETUP.md) (viewers, optional MCP, ingestion toolchain) and
 write your instance's first journal entry.
 
+> [!TIP]
+> Or skip the ceremony: point your favourite agent at this repository's URL and
+> ask it to set everything up for you.
+
 ## 🧭 Orientation
 
 | Who | Where |
@@ -173,10 +177,17 @@ hitting, even while following solid, established frameworks, was **retrieval and
 drift**: knowledge went in, but finding it later - and keeping it true - didn't
 scale.
 
-From the first LLMs onward I wanted to leverage them for retrieval and knowledge
-synthesis; only recently has the ecosystem matured enough for agents to act as
-the brain of a full, end-to-end integrated research system - one that builds and
-maintains the second brain rather than merely querying it.
+From the first LLMs onward I wanted to leverage them for retrieval and for
+synthesizing knowledge into actionable insight. I started theorizing about their
+potential when OpenAI's early closed programming demos appeared, and first put
+them to the test in my
+[master's thesis](https://repozitorij.uni-lj.si/IzpisGradiva.php?id=165469&lang=eng) -
+mining news coverage of the global chip shortage, iteratively expanding search
+terms, and tracking occurrence trends as early-warning signals, with LLMs proposed
+as the analysts inside the alert system. But only recently has the ecosystem
+matured enough for agents to act as the brain of a full, end-to-end integrated
+research system - one that builds and maintains the second brain rather than
+merely querying it.
 
 This repository is my current iteration of that attempt: a system for knowledge
 synthesis with a thin ontology and thick epistemics - and a meta-tool meant to
