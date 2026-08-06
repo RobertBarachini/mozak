@@ -34,6 +34,8 @@ Newest first.
   name leaks no content. The audit found nothing else: no private-zone file was ever
   tracked, no absolute paths/emails/instance references in any tracked file, and CI
   passes on a bare clone (the ownership guard no-ops without a `template` remote).
+  Post-publish, once `v1.0.0` was tagged and released: `CITATION.cff` gained
+  `version: 1.0.0` + `date-released`.
 
 - **README polish (owner additions, reworded):** the agent-bootstrap line under *Start
   an instance* became a `[!TIP]` callout, and the *Why* section's provenance sentence
