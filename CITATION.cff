@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use or build on this system, please cite it as below."
+type: software
+title: "mozak — agent-maintained, program-agnostic knowledge graphs"
+authors:
+  - family-names: "Barachini"
+    given-names: "Robert"
+license: MIT
+repository-code: "https://github.com/RobertBarachini/mozak"
+abstract: >-
+  A template for agent-maintained knowledge graphs where plain Markdown is the
+  single source of truth and every application (agent harness, Obsidian, Logseq,
+  grep) is a replaceable lens. Forward links are wikilinks in note bodies;
+  backlinks are derived, never stored. Ships an agent constitution (AGENTS.md),
+  a frontmatter schema, stdlib-only link/annotation tooling, and a
+  template-instance sync contract.
+keywords:
+  - knowledge-graph
+  - personal-knowledge-management
+  - ai-agents
+  - zettelkasten
+  - markdown

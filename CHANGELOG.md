@@ -16,6 +16,25 @@ Newest first.
 
 ## 2026-08-06
 
+- **Publish preparation — the template goes public at `github.com/RobertBarachini/mozak`.**
+  New community files: `CONTRIBUTING.md` (a rule-9 pointer to SYNC's Ownership table and
+  upstream ritual, and rule 7's definition of done) and `CITATION.cff` (researchers get
+  GitHub's "Cite this repository"). README: live CI badge for the `check` workflow, the
+  real clone URL, and a warning that GitHub's "Use this template" button severs the
+  shared history the SYNC pull ritual needs — clone-then-rename is the sanctioned birth.
+  Images: logo replaced with the corrected 1080×694 export (shipped at 840 px, the
+  smaller encode); new `mozak-social-preview.png` (1280×640, for Settings → Social
+  preview — GitHub ignores in-repo images for link cards). The VS Code screenshot's
+  first browser tab ("Drive visualization loop…") stays visible **by design**: it is
+  the agent session driving the loop beside the render — the all-in-one story the
+  caption tells, not a leak (owner-confirmed).
+  Consciously accepted after a full-history audit: one commit body (`43861dd`)
+  names the founding instance's directory — rewriting history would invalidate every
+  instance's merge-base with the template, which the SYNC contract can't survive; the
+  name leaks no content. The audit found nothing else: no private-zone file was ever
+  tracked, no absolute paths/emails/instance references in any tracked file, and CI
+  passes on a bare clone (the ownership guard no-ops without a `template` remote).
+
 - **README polish (owner additions, reworded):** the agent-bootstrap line under *Start
   an instance* became a `[!TIP]` callout, and the *Why* section's provenance sentence
   now links the owner's master's thesis in Markdown and states concretely what it

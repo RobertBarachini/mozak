@@ -8,6 +8,7 @@
 
 *Plain Markdown is the single source of truth — every tool is a replaceable lens.*
 
+[![check](https://github.com/RobertBarachini/mozak/actions/workflows/check.yml/badge.svg)](https://github.com/RobertBarachini/mozak/actions/workflows/check.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Source of truth](https://img.shields.io/badge/source_of_truth-plain_Markdown-ec4899.svg)](AGENTS.md)
 [![Backlinks](https://img.shields.io/badge/backlinks-derived%2C_never_stored-9f2b68.svg)](AGENTS.md)
@@ -38,10 +39,14 @@ updates down and upstreaming generalizable improvements — per the contract in
 ## 🚀 Start an instance
 
 ```bash
-git clone <this-repo> mybrain && cd mybrain
+git clone https://github.com/RobertBarachini/mozak.git mybrain && cd mybrain
 git remote rename origin template     # the template stays attached as upstream
 python3 tools/graph.py check          # smoke test: 0 broken links, exit 0
 ```
+
+Clone rather than GitHub's *"Use this template"* button — the button copies files
+with an unrelated history and no `template` remote, which severs the shared
+ancestry the [SYNC.md](SYNC.md) pull ritual depends on (per [SETUP.md](SETUP.md) §1).
 
 Then follow [SETUP.md](SETUP.md) (viewers, optional MCP, ingestion toolchain) and
 write your instance's first journal entry.
