@@ -14,6 +14,21 @@ in its own journal.
 
 Newest first.
 
+## 2026-08-23
+
+- **`.personal-shared/` is the authority for environment facts, and outranks probing.** Its
+  layout row gains a read-before-claim duty: the shell an agent runs in may not be the user's
+  machine (VM, container, remote host), so `lsb_release`, package and hardware queries describe
+  *that shell* only — the zone is read first and treated as authoritative, a probe is reported as
+  a probe of wherever the session runs, and a fact missing from the zone is asked for rather than
+  inferred. Upstreamed from an instance where an agent repeatedly reported a VM's OS release and
+  package versions as the user's own, and was about to recommend a package version the user's
+  actual release does not ship. The instance had already documented the VM correctly, so the gap
+  was **ordering** — probing before reading — not missing information, which is why the fix is a
+  duty in the constitution rather than more content in the zone. `pages/ingestion-toolchain.md`'s
+  "Probe before use" rule gains a pointer to it: per rule 9, probing for *whether a tool exists*
+  and probing for *whose machine you are on* are distinct rules and keep one home each.
+
 ## 2026-08-06
 
 - **Publish preparation — the template goes public at `github.com/RobertBarachini/mozak`.**

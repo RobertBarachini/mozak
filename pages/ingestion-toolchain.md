@@ -4,7 +4,7 @@ type: note
 domain: [meta]
 tags: [workflow, tooling]
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-08-23
 status: growing
 ---
 
@@ -17,7 +17,9 @@ sessions behave consistently instead of each rediscovering an approach.
 
 ## Tool policy (MUST)
 
-1. **Probe before use** — `command -v <tool>` (or `<tool> --version`). Never assume.
+1. **Probe before use** — `command -v <tool>` (or `<tool> --version`). Never assume. A probe
+   describes the shell the session runs in, which may not be the user's machine — environment
+   facts come from `.personal-shared/` (its AGENTS layout row), not from probing.
 2. **Missing tool: degrade loudly, never silently.** If installing is within the
    session's granted privileges, offer it with the exact command (`sudo apt install
    ffmpeg`, `uv tool install yt-dlp`, …). If not, tell the human what is missing
