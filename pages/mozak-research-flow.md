@@ -1,5 +1,6 @@
 ---
 title: The research flow — gather, capture, distill, link, re-prompt
+aliases: [research-flow]
 type: note
 domain: [meta]
 tags: [workflow]
@@ -13,7 +14,7 @@ status: growing
 How a research topic enters this graph and pays off later. One graph holds all
 domains; per-domain MOCs (linked from [[start-here]]) scope each session's context,
 and derived backlinks keep retrieval cheap — the mechanism argued in
-[[plain-text-knowledge-graphs]].
+[[mozak-plain-text-knowledge-graphs]].
 
 1. **Kick off** — open an agent session in this repo and state the question
    (e.g. "investing strategies for EU individuals"). The constitution loads
@@ -21,9 +22,9 @@ and derived backlinks keep retrieval cheap — the mechanism argued in
 2. **Gather** — web research, transcript fetches (`yt-dlp --skip-download
    --write-auto-subs`, run locally — cloud IPs get blocked), documents — plus
    whatever is already waiting in `raw/`, the anytime dump zone for unstructured
-   files. Tool policy and per-format drain recipes: [[ingestion-toolchain]].
-   Scale breadth/depth and stop by the gates in [[search-gates]]; get the bytes by the
-   cheapest rung that works, per [[web-acquisition-ladder]], which also sets the separate
+   files. Tool policy and per-format drain recipes: [[mozak-ingestion-toolchain]].
+   Scale breadth/depth and stop by the gates in [[mozak-search-gates]]; get the bytes by the
+   cheapest rung that works, per [[mozak-web-acquisition-ladder]], which also sets the separate
    fetch budget and records which rung produced each capture.
 3. **Capture** — one file per source into `sources/<date>-<slug>.md` (source
    template): provenance frontmatter + cleaned raw content. Immutable afterwards.
@@ -33,9 +34,9 @@ and derived backlinks keep retrieval cheap — the mechanism argued in
 4. **Distill** — atomic, concept-titled notes into `pages/`; update rather than
    duplicate when a note already covers the concept; bump `updated:`, promote
    `status:` on deepening. Every candidate note passes the admission test (AGENTS
-   rule 5): your processing, never a transcription — [[store-the-delta]].
+   rule 5): your processing, never a transcription — [[mozak-store-the-delta]].
    Load-bearing claims carry inline capture anchors, and contradictions with
-   existing notes trigger the protocol in [[claim-level-provenance]] — contested
+   existing notes trigger the protocol in [[mozak-claim-level-provenance]] — contested
    first, adversarial both ways, losers struck through, never silently replaced.
 5. **Link** — weave new notes into the existing graph with stated reasons; update
    the domain MOC (create `moc-<domain>` + link from [[start-here]] if the domain
@@ -58,7 +59,7 @@ leaves a journal line naming the notes it drew on, so provenance survives the
 render's disposal. A render stays **local** to that folder (or a location the user
 explicitly names); publishing it outward — to Claude/Anthropic Artifacts or any external
 host — requires the user's explicit authorization (AGENTS rule 10). To turn a reader's
-reactions to a render back into graph work, [[report-annotation-loop]] captures
+reactions to a render back into graph work, [[mozak-report-annotation-loop]] captures
 per-passage re-prompts on the rendered HTML and drains them through this same
 distill-and-journal cycle.
 

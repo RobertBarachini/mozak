@@ -28,12 +28,12 @@ The catalog is therefore just: `grep -rA4 "^# recipe:" tools/recipes/`.
   are simply invisible to a grep of `tools/`, which is why an obviously recurring
   transformation can sit un-promoted for months. Don't write speculative recipes;
   documenting a technique in a page is not writing a recipe.
-- Recipes follow the tool policy of the ingestion-toolchain page: probe deps,
+- Recipes follow the tool policy of the mozak-ingestion-toolchain page: probe deps,
   degrade loudly, never modify inputs in place.
 - **A recipe never writes into the graph** — not `pages/`, `sources/`, `journals/`, or
   `archive/`. Recipes write to stdout, to `_generated/`, or to a path given on the
   command line. Authoring a note is a toll paid per item
-  ([pages/store-the-delta.md](../../pages/store-the-delta.md)); a tool that could pay it
+  ([pages/mozak-store-the-delta.md](../../pages/mozak-store-the-delta.md)); a tool that could pay it
   in bulk would dissolve the two-pass gate, so no tool is given the ability.
 - Ownership: this directory is template-owned and public. Instance-local recipes
   (private paths, personal services) live in `tools/recipes/local/` — instance-owned,
@@ -69,7 +69,7 @@ to take dependencies on — and may declare what they need, in exactly two forms
 
 1. **External binaries** — the `# needs:` line of the contract header. Probe with
    `shutil.which`; on absence, exit with the install command and what the tool was for
-   (the ingestion-toolchain tool policy: degrade loudly, never silently).
+   (the mozak-ingestion-toolchain tool policy: degrade loudly, never silently).
 2. **Python packages** — [PEP 723](https://peps.python.org/pep-0723/) inline script
    metadata: a `# /// script` comment block in the file itself. The runner is
    `uv run <recipe>`, which resolves the packages into a throwaway environment and

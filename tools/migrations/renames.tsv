@@ -1,0 +1,12 @@
+# Shipped stem renames — replayed in instances by `python3 tools/graph.py migrate` (SYNC pull ritual).
+# Append-only. Columns: date<TAB>old-stem<TAB>new-stem. Template-owned.
+2026-09-14	claim-level-provenance	mozak-claim-level-provenance
+2026-09-14	ingestion-toolchain	mozak-ingestion-toolchain
+2026-09-14	open-knowledge-format	mozak-open-knowledge-format
+2026-09-14	plain-text-knowledge-graphs	mozak-plain-text-knowledge-graphs
+2026-09-14	report-annotation-loop	mozak-report-annotation-loop
+2026-09-14	research-flow	mozak-research-flow
+2026-09-14	search-gates	mozak-search-gates
+2026-09-14	store-the-delta	mozak-store-the-delta
+2026-09-14	system-lineage	mozak-system-lineage
+2026-09-14	web-acquisition-ladder	mozak-web-acquisition-ladder

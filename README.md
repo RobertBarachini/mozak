@@ -81,7 +81,7 @@ this section shows, the meta pages define.
 > briefing I can talk back to."*
 
 1. **Scope by stakes.** Before any search, the question is tiered per the
-   [search gates](pages/search-gates.md): this one gates a real financial
+   [search gates](pages/mozak-search-gates.md): this one gates a real financial
    decision → tier 3 (commitment) — full-landscape breadth, adversarial
    verification mandatory.
 2. **Gather → capture.** A five-angle sweep (regulation, fund mechanics, local
@@ -93,22 +93,22 @@ this section shows, the meta pages define.
    claim** — exact statutory figure, recency/reform check, active refutation.
 4. **A 2-vs-1 split.** On the single most decision-relevant figure, the lenses
    disagree. Majority vote would be the wrong move: per
-   [claim-level provenance](pages/claim-level-provenance.md) the split triggers an
+   [claim-level provenance](pages/mozak-claim-level-provenance.md) the split triggers an
    adversarial search of *both* sides against primary sources. The dissent is
    refuted — and preserved in the note as negative knowledge, so it is never
    re-litigated.
 5. **Distill → link.** Claims passing the
-   [admission test](pages/store-the-delta.md) become 25 atomic notes plus a domain
+   [admission test](pages/mozak-store-the-delta.md) become 25 atomic notes plus a domain
    MOC, every wikilink stating *why* it exists; the search stops on a recorded
-   [convergence gate](pages/search-gates.md), not on exhaustion, and
+   [convergence gate](pages/mozak-search-gates.md), not on exhaustion, and
    `graph.py check` exits 0.
 6. **Synthesize outward.** An HTML briefing is rendered to
    `_generated/presentations/` — disposable by contract
-   ([research flow](pages/research-flow.md)): every insight in it lives in
+   ([research flow](pages/mozak-research-flow.md)): every insight in it lives in
    `pages/` first, and a render stays local — publishing is a separate,
    explicitly authorized act (AGENTS rule 10).
 7. **Re-prompt the render.** `python3 tools/annotate.py <report>` serves the
-   briefing with an [annotation overlay](pages/report-annotation-loop.md):
+   briefing with an [annotation overlay](pages/mozak-report-annotation-loop.md):
    highlight a passage, attach a prompt; an event-driven watcher wakes the agent,
    which drains the queue — answers appear in the open page live, and wikilinks
    in answers open the underlying notes in place.
@@ -167,7 +167,7 @@ time.</em>
 > pointed at the existing wrapper note; nothing new to distill.
 
 Most exchanges end exactly like this: the right outcome is usually a pointer into
-the graph, not a new note — that's [store the delta](pages/store-the-delta.md)
+the graph, not a new note — that's [store the delta](pages/mozak-store-the-delta.md)
 working as intended.
 
 </details>

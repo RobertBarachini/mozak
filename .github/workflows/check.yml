@@ -7,6 +7,11 @@
 # installed is what proves the core is zero-install (AGENTS `tools/` row). Recipes
 # that declare PEP 723 dependencies are covered by the static conformance test
 # instead of by being executed here.
+#
+# The last step is the template's own shipping-convention check (reserved `mozak-`
+# stem prefix, rename ledger — AGENTS `pages/` row, rule 6). It is gated on the
+# template's repository slug because the template/instance distinction cannot be
+# inferred from a checkout: instances inherit this file and skip that step.
 name: check
 on: [push, pull_request]
 jobs:
@@ -16,3 +21,5 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 tools/graph.py check
       - run: python3 -m unittest discover -s tools/tests -v
+      - run: python3 tools/graph.py ownership --template
+        if: github.repository == 'RobertBarachini/mozak'

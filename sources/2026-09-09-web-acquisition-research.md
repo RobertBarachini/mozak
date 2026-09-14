@@ -16,7 +16,7 @@ Internal agent-generated research, so no `url:` (schema exception for `medium: r
 Provenance: a 21-subagent run on 2026-09-09 covering browser automation and stealth,
 HTTP-level tooling, proxy/capture, structured access, document and media extraction,
 anti-bot reality, the legal landscape, and operational patterns. Distilled into
-[[web-acquisition-ladder]].
+[[mozak-web-acquisition-ladder]].
 
 **Reliability envelope, inherited by everything citing this capture.** Findings are graded
 where the underlying reports graded them: **[V]** verified against a primary source this
@@ -44,7 +44,7 @@ decoration.
 - **Network egress is a residential IP**, not datacenter. → Do not add
   proxies: residential reputation is the input commercial proxies sell, and a datacenter VPS
   would make results *worse*. This is also the mechanism behind the existing run-fetches-locally
-  rule in [[ingestion-toolchain]].
+  rule in [[mozak-ingestion-toolchain]].
 - **User-Agent spoofing changes nothing.** `curl` with its default UA and with a full Chrome
   141 UA got identical results: reuters.com 401 both ways, g2.com 403 both ways.
 - **The block is at the TLS/HTTP-2 fingerprint layer.** g2.com still returned 403 with a
@@ -71,7 +71,7 @@ decoration.
 - **Live machine-readable signals in the wild**: `Content-signal: search=no, ai-train=no` in
   stackoverflow.com/robots.txt; `License: https://theguardian.com/license.xml` in
   theguardian.com/robots.txt.
-- **Local toolchain gaps**: `pandoc` is named in the [[ingestion-toolchain]] roster but is not
+- **Local toolchain gaps**: `pandoc` is named in the [[mozak-ingestion-toolchain]] roster but is not
   installed, and **no JavaScript runtime is present**, which silently degrades `yt-dlp`'s
   YouTube path.
 
@@ -179,8 +179,8 @@ three concerned the author's own jurisdiction and moved with that analysis to th
 
 ## Distilled into
 
-- [[web-acquisition-ladder]] — the rungs, the jurisdiction-neutral *Your context, your call*
+- [[mozak-web-acquisition-ladder]] — the rungs, the jurisdiction-neutral *Your context, your call*
   section, the acquisition budget, the store contract, and the T6 handoff. Jurisdiction-specific
   analysis is deliberately in neither the page nor this capture.
-- [[ingestion-toolchain]] — the two measured local gaps (`pandoc` absent, no JS runtime) and
+- [[mozak-ingestion-toolchain]] — the two measured local gaps (`pandoc` absent, no JS runtime) and
   the live-URL drain path.

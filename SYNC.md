@@ -10,13 +10,15 @@ Agents never push in either repo; humans review drafted commits and push.
 
 | Class | Paths | Merge-conflict resolution |
 |---|---|---|
-| **Template-owned** | `tools/` (except `tools/recipes/local/` — instance-owned, never shipped, never auto-upstreamed), `templates/`, `CLAUDE.md`, `.claude/skills/` (agent-harness lenses the template ships; per-machine Claude state stays gitignored and local), `.gitignore`, `.github/`, `LICENSE`, `CHANGELOG.md`, `ROADMAP.md`, and the **meta pages** — every pages/*.md the template ships (the template's own pages listing IS the roster, per AGENTS rule 9 no copy is maintained here; the ownership guard resolves it dynamically from the template remote) except (`pages/start-here.md` — the birth seed, instance-owned below) | Take template's side. Instances don't edit these; a needed change is made in the template (or upstreamed first). Instances annotate a meta page by **linking to it from their own notes** — backlinks are derived, so the connection surfaces without editing the shared body. |
+| **Template-owned** | `tools/` (except `tools/recipes/local/` — instance-owned, never shipped, never auto-upstreamed), `templates/`, `CLAUDE.md`, `.claude/skills/` (agent-harness lenses the template ships; per-machine Claude state stays gitignored and local), `.gitignore`, `.github/`, `LICENSE`, `CHANGELOG.md`, `ROADMAP.md`, and the **meta pages** — every page the template ships: `pages/mozak-*.md` by the reserved prefix (AGENTS pages row) plus the hub `pages/moc-meta.md` (the template's own pages listing IS the roster, per AGENTS rule 9 no copy is maintained here; the ownership guard resolves it dynamically from the template remote and flags a locally coined mozak- stem) except (`pages/start-here.md` — the birth seed, instance-owned below) | Take template's side. Instances don't edit these; a needed change is made in the template (or upstreamed first). Instances annotate a meta page by **linking to it from their own notes** — backlinks are derived, so the connection surfaces without editing the shared body. |
 | **Shared-evolving** | `AGENTS.md`, `SYNC.md`, `conventions/frontmatter-schema.md`, `SETUP.md` (body) | Merge by intent: system-generic content follows the template; instance-specific lines stay. Any generalizable improvement made instance-side MUST be upstreamed (see ritual below) — otherwise the repos drift apart permanently. |
-| **Instance-owned** | All other `pages/` — including `pages/start-here.md`, the instance's front door and domain index: a template-authored **birth seed**, shipped at instantiation and never updated by the template afterwards — `journals/`, `sources/` (except its README and the template-shipped research captures tagged `founding` — the public evidence core behind the design's claims), `raw/`, `assets/`, `.private/`, and `.personal-shared/` contents (all gitignored; the template ships only their READMEs / `.gitkeep` markers), `archive/` content (except its README), `README.md` | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
+| **Instance-owned** | All other `pages/` — including `pages/start-here.md`, the instance's front door and domain index: a template-authored **birth seed**, shipped at instantiation and never updated by the template afterwards (one mechanical exception — a wikilink retarget after a shipped rename — is stated in the birth-divergences register below) — `journals/`, `sources/` (except its README and the template-shipped research captures tagged `founding` — the public evidence core behind the design's claims), `raw/`, `assets/`, `.private/`, and `.personal-shared/` contents (all gitignored; the template ships only their READMEs / `.gitkeep` markers), `archive/` content (except its README), `README.md` | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
 
 **Enforced by** `python3 tools/graph.py ownership`: advisory in the rule-7 `check`
 bracket, opt-in pre-commit hard gate (SETUP). An *instance* is any repo with a
-`template` remote; the guard is a no-op in the template itself. A file whose working
+`template` remote; the guard is a no-op in the template itself — there, `ownership --template`
+verifies the shipping convention instead (reserved `mozak-` prefix, rename ledger) and runs
+in the template's own CI only. A file whose working
 content is byte-identical to the template's is never flagged (it is a sync receipt,
 not local authorship — so a pull-in-progress stays clean even with the hook on).
 
@@ -62,7 +64,15 @@ upstreaming: strip names, dates-of-use, domain content, founding-capture wikilin
 - `start-here.md` — a **birth seed**: the template ships the empty front door, then
   never updates an instance's copy again (template-side edits reach only future
   instances). The instance owns it outright — its `## Domains` index grows there.
-  On a pull, any conflict here resolves keep-ours, wholesale.
+  On a pull, any conflict here resolves keep-ours, wholesale. **One mechanical
+  exception, stated so no agent has to infer it:** when the template renames a shipped
+  stem (AGENTS rule 6 — the rename lands in `tools/migrations/renames.tsv`), its *own*
+  copy of the seed has that wikilink retargeted too, because the template's `check` must
+  stay green. So an incoming pull may carry a `start-here.md` hunk that changes nothing but
+  `[[old-stem]]` → `[[mozak-old-stem]]`. That is not the template updating your seed.
+  Take either side — let git auto-merge it, or keep-ours on conflict — and run
+  `python3 tools/graph.py migrate`; both paths land on the same file. Any *other*
+  incoming change to `start-here.md` is a template mistake: keep yours, report it upstream.
 - Instances have `journals/*.md`, their own `sources/*.md`, `archive/` content
   (e.g. a founding archive); the template ships only the directory READMEs, the
   `journals/.gitkeep`, the `.private/` and `.personal-shared/` `.gitkeep` markers,
@@ -80,6 +90,7 @@ git diff main...template/main        # ...and the full content delta since the m
 # classify every incoming change against the Ownership table BEFORE merging
 git merge template/main              # a real merge commit — never rebase or squash a sync
 # conflicts: resolve per the Ownership table
+python3 tools/graph.py migrate       # repoint your own links to stems the template renamed (AGENTS rule 6)
 python3 tools/graph.py check         # must exit 0 before finishing
 # journal the sync: what came in, what was read, anything deliberately NOT taken
 ```

@@ -19,7 +19,7 @@ host that answers 403/429 or a challenge page is skipped for the rest of the run
 (its answer was heard); `run` prints its plan and needs `--yes` — the documented
 protocol is that the agent shows the user that plan first. Every pull's row
 carries `why` and the parent URL, so the log reads as reasoning, not traffic.
-Record the sweep and the stop gate in the journal, per search-gates.
+Record the sweep and the stop gate in the journal, per mozak-search-gates.
 Conventions: AGENTS.md; this recipe never writes into the graph.
 """
 
@@ -129,7 +129,7 @@ def cmd_run(root: Path, cfg: dict, prov: str, yes: bool, max_n: int | None, perf
         print(f"  - {e['url']}\n      why: {e['why']}")
     if not yes:
         print("\nnot running: re-run with --yes once the user has seen this plan "
-              "(the protocol in pages/web-acquisition-ladder.md).", file=sys.stderr)
+              "(the protocol in pages/mozak-web-acquisition-ladder.md).", file=sys.stderr)
         return 3
 
     if perform is None:

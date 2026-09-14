@@ -1,5 +1,6 @@
 ---
 title: Claim-level provenance — cite at the claim, repair surgically
+aliases: [claim-level-provenance]
 type: note
 domain: [meta]
 tags: [design, workflow]
@@ -35,7 +36,7 @@ When new evidence contradicts an existing note:
 2. **Adversarial search, both ways** — deliberately seek DISconfirming evidence
    for the old claim AND for the newcomer (validating only the challenger swaps
    one bias for another). Capture findings into `sources/` as usual; scale the
-   effort by [[search-gates]].
+   effort by [[mozak-search-gates]].
 3. **Resolve in place** — rewrite so the title and opening paragraph state the
    best current understanding. Superseded claims are never silently deleted:
    they stay, struck through, dated, and anchored —
@@ -51,8 +52,8 @@ When new evidence contradicts an existing note:
 The struck-through + `contested` conventions exist so partial truth can live in
 the graph **without corrupting context**: an agent reading a contested note or a
 struck claim cannot mistake either for settled fact. This governs the lifecycle
-of what [[store-the-delta]] admits, and is enforced at the Distill step of
-[[research-flow]]. The same discipline applies to the system's own rules —
+of what [[mozak-store-the-delta]] admits, and is enforced at the Distill step of
+[[mozak-research-flow]]. The same discipline applies to the system's own rules —
 conventions have one authoritative home and dependents cite it (AGENTS rule 9),
 because a restated rule drifts exactly like an unanchored claim.
 

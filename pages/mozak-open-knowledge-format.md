@@ -1,5 +1,6 @@
 ---
 title: Open Knowledge Format (OKF) — convergent, adjacent, not adopted
+aliases: [open-knowledge-format]
 type: note
 domain: [meta]
 tags: [design, interop]
@@ -16,7 +17,7 @@ agent-friendly" knowledge: directories of Markdown files with YAML frontmatter
 maintained like code in version control, linked into a graph, consumed by agents
 that parse frontmatter, traverse links, and tolerate unknown fields. That is the
 same bet this system makes — independent industry convergence that validates
-[[plain-text-knowledge-graphs]].
+[[mozak-plain-text-knowledge-graphs]].
 
 Why it is not our foundation:
 
@@ -25,7 +26,7 @@ Why it is not our foundation:
   name-keyed wikilinks with check-enforced integrity (a broken link fails check).
 - No backlink concept; we derive backlinks as a first-class query.
 - Organizes by typed directory taxonomy (`tables/`, `metrics/`, an `index.md` per
-  directory) — the hierarchy-first shape [[system-lineage]] records us deliberately
+  directory) — the hierarchy-first shape [[mozak-system-lineage]] records us deliberately
   rejecting in favor of associative flatness.
 - Its domain is organizational data-asset knowledge (datasets, tables, metrics,
   playbooks; BigQuery/Dataplex ecosystem), not personal multi-domain research.

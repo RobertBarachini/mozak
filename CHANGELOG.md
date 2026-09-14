@@ -14,6 +14,45 @@ in its own journal.
 
 Newest first.
 
+## 2026-09-14
+
+- **Template-shipped pages carry a reserved `mozak-` stem prefix, and a shipped rename replays
+  in instances with one command.** The template's pages share one flat namespace with every
+  instance's notes (rule 1), so a page the template shipped later could collide with a stem an
+  instance already held, and the only defence was the duplicate-stem failure at pull time. Now
+  every shipped page is `mozak-<stem>` — ten renamed today with `graph.py rename`, each keeping
+  its old name in `aliases:` — with the hub `moc-meta` and the birth seed `start-here` as the
+  two exceptions. The rule lives in the AGENTS `pages/` row; the SYNC ownership cell names
+  `pages/mozak-*.md`; `graph.py ownership` flags a locally coined `mozak-` stem as
+  RESERVED-STEM. Two alternatives were rejected on the way. A `pages/meta/` folder, because the
+  stem *is* the identity: a subfolder would leave the namespace exactly as flat as before,
+  contradict the `pages/` row and the never-folders domain rule, and fall out of the
+  non-recursive ownership roster. And `meta-` as the token — the system's own domain name, and
+  the first draft's choice — because a reserved prefix has to be something no research topic
+  will ever coin, and `meta-` fails that test twice: it is a company (an instance researching
+  Meta Platforms writes `meta-llama`, `meta-quest`) and a dictionary prefix (`meta-analysis` is
+  the commonest note type in evidence-based research). The project's own name is the one token
+  with no such life of its own. Ownership, not topic, is what the prefix reserves; topic stays
+  in `domain: [meta]` and the `moc-meta` hub, which are shared with instances, not reserved.
+  The instance side is the new machinery: after a pull the template's file has moved but the
+  instance's own `[[old]]` links have not, and `rename` cannot help because the old note is
+  gone. `tools/migrations/renames.tsv` is the append-only ledger of shipped renames (rule 6);
+  `graph.py migrate` replays it — rewriting `[[old]]`, `[[old|shown]]` and `[[old#anchor]]` to
+  the current stem, following chained renames, leaving a row alone when a local note still
+  holds the old stem, idempotent — and `check` names stale targets with a hint pointing at
+  `migrate`, so the pull ritual's failure is actionable. `ownership --template` verifies the
+  shipping convention (prefix, ledger consistency) and runs in the template's CI only, gated on
+  the repository slug because a checkout cannot tell template from instance. One side effect
+  is now written down rather than left to inference: the template's own `start-here.md` — the
+  birth seed instances own outright — has its wikilinks retargeted by a shipped rename like
+  every other note, so a pull can carry a link-only hunk on a file SYNC calls never-updated;
+  SYNC's birth-divergences register states the exception and the procedure (take either side,
+  run `migrate`, same result; anything else incoming on the seed is a template mistake).
+  Path links in the
+  root docs, the drain-report skill, `annotate.py` and the recipes were swept; CHANGELOG history
+  keeps the old names. Tests: `tools/tests/test_graph.py`, stdlib, on temp repos only, so the
+  suite passes in an instance whose own pages legitimately lack the prefix.
+
 ## 2026-09-09
 
 - **The stdlib-only invariant is rescoped to a zero-install *core*, and recipes gain a

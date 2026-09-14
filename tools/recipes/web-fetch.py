@@ -7,7 +7,7 @@
 
 """Fetch one URL politely, record how, and extract readable text.
 
-Implements rungs T0-T2 of pages/web-acquisition-ladder.md. `--probe` does T0: it
+Implements rungs T0-T2 of pages/mozak-web-acquisition-ladder.md. `--probe` does T0: it
 reports a host's own declared access paths — robots.txt with its Content-Signal
 and RSL License lines, sitemaps, feeds, llms.txt, JSON-LD, OpenAPI, security.txt
 — so a session can ask "should I even be fetching this?" before it fetches.
@@ -662,7 +662,7 @@ def explain_failure(row: dict, cfg: dict) -> list[str]:
             nxt = "T4 (a real browser executing the page's JavaScript)"
         else:
             nxt = NEXT_RUNG.get(cur, NEXT_RUNG["T1"])
-        note.append(f"  Next rung would be {nxt}; ladder: pages/web-acquisition-ladder.md")
+        note.append(f"  Next rung would be {nxt}; ladder: pages/mozak-web-acquisition-ladder.md")
     note.append("  Recorded in _generated/fetch/fetch.jsonl. Not treated as content.")
     return note
 

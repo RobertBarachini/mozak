@@ -10,7 +10,7 @@ updated: 2026-07-07
 
 Root map of content — the front door for humans and the orientation point agents
 link new domain MOCs from. Rules live in [AGENTS.md](../AGENTS.md); the reasoning
-behind the whole design is captured in [[plain-text-knowledge-graphs]], which
+behind the whole design is captured in [[mozak-plain-text-knowledge-graphs]], which
 explains why this repo trusts plain text and derived backlinks over any single app.
 
 ## Domains

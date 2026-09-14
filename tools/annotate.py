@@ -4,7 +4,7 @@
 A capture-and-serve tool, NOT an AI client: it serves a report locally with an
 injected annotation overlay and writes highlighted-text + prompt pairs to a plain
 `annotations.md` beside the render. Whatever harness you point at that file (Claude
-Code, another agent, a script) does the work — see pages/report-annotation-loop.md.
+Code, another agent, a script) does the work — see pages/mozak-report-annotation-loop.md.
 The served page live-refreshes (polls file mtimes), so an agent's drain — flipped
 statuses and appended answers — appears in an open page without a manual reload.
 The tool holds no API key, names no model, and binds 127.0.0.1 only (AGENTS rule 10).
@@ -172,7 +172,7 @@ def _label(a: dict) -> str:
 
 def dump_annotations(path: Path, meta: dict, items: list) -> None:
     """Regenerate the whole file, then swap atomically. Serialization is tool-managed;
-    the drain contract (report-annotation-loop) documents the shape agents append to."""
+    the drain contract (mozak-report-annotation-loop) documents the shape agents append to."""
     out = ["---", "report: %s" % meta.get("report", ""),
            "created: %s" % meta.get("created", "")]
     if meta.get("title"):
@@ -304,7 +304,7 @@ body.mzk-viewing #mzk-view{display:flex}
 """
 
 # Injected into the report's OWN document (the iframe) — non-destructive highlight,
-# zero DOM change to the report; see report-annotation-loop for why this is safe.
+# zero DOM change to the report; see mozak-report-annotation-loop for why this is safe.
 IFRAME_STYLE = ("::highlight(mzk){background-color:rgba(245,197,24,.45)}"
                 "::highlight(mzk-active){background-color:rgba(245,150,0,.8)}")
 
@@ -967,7 +967,7 @@ class Handler(BaseHTTPRequestHandler):
             dump_annotations(self.ann_path, meta, items)
         rel = _rel(self.ann_path, self.root)
         self._json({"path": str(self.ann_path), "rel": rel,
-                    "instruction": "drain %s per the report-annotation-loop" % rel})
+                    "instruction": "drain %s per the mozak-report-annotation-loop" % rel})
 
 
 def is_headless_remote() -> bool:

@@ -1,5 +1,6 @@
 ---
 title: Store the delta, not the encyclopedia
+aliases: [store-the-delta]
 type: note
 domain: [meta]
 tags: [design]
@@ -15,7 +16,7 @@ The failure mode this graph must avoid has a name — the **collector's fallacy*
 and produces a worse Wikipedia with bad retrieval. The antidote is consensus
 across serious PKM schools: **store transformations, not transcriptions**.
 Luhmann's slip-box was never an encyclopedia — it stored his thinking; references
-lived separately. This note complements [[plain-text-knowledge-graphs]]: that one
+lived separately. This note complements [[mozak-plain-text-knowledge-graphs]]: that one
 argues *where* knowledge lives, this one argues *what deserves to live there*.
 
 **The counterfactual test**: imagine a full local Wikipedia dump (Kiwix) beside
@@ -57,7 +58,7 @@ Consequences:
   processed (the two-pass toll is the structural anti-hoarding gate); knowledge
   enters `pages/` exclusively through distillation, gated by the admission test
   (AGENTS rule 5) that this note grounds — enforced at the Distill step of
-  [[research-flow]].
+  [[mozak-research-flow]].
 
 ## Sources
 

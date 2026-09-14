@@ -17,7 +17,7 @@ thing nobody should re-derive per session.
 Human-authored subtitles beat ASR, so both --write-subs and --write-auto-subs are
 requested and yt-dlp prefers the former. Run locally: cloud/datacenter IPs get
 blocked, and full YouTube support now needs a JavaScript runtime — see the
-ingestion-toolchain page.
+mozak-ingestion-toolchain page.
 
 URL mode is web acquisition, so it is gated on `[consent].acknowledged` like every
 fetch recipe, and it hands `.personal-shared/cookies.txt` to yt-dlp when the jar is
@@ -125,7 +125,7 @@ def fetch_sub(url: str, lang: str) -> Path:
     sys.exit(f"error: no subtitles retrieved for lang '{lang}'.\n"
              f"yt-dlp said: {r.stderr.strip()[-500:] or r.stdout.strip()[-500:]}\n"
              "No captions may exist — fall back to audio + whisper "
-             "(see the ingestion-toolchain page).")
+             "(see the mozak-ingestion-toolchain page).")
 
 
 def main() -> int:

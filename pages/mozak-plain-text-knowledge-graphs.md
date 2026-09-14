@@ -1,5 +1,6 @@
 ---
 title: Plain-text knowledge graphs outlive their tools
+aliases: [plain-text-knowledge-graphs]
 type: note
 domain: [meta]
 tags: [design]

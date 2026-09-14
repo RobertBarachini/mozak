@@ -1,5 +1,6 @@
 ---
 title: The web-acquisition ladder — cheapest rung that works
+aliases: [web-acquisition-ladder]
 type: note
 domain: [meta]
 tags: [workflow, tooling]
@@ -10,13 +11,13 @@ status: growing
 
 # The web-acquisition ladder — cheapest rung that works
 
-How to obtain bytes from a host you do not control. [[ingestion-toolchain]] covers what to
-do with a file you already have; this covers getting one. [[search-gates]] sizes how much
+How to obtain bytes from a host you do not control. [[mozak-ingestion-toolchain]] covers what to
+do with a file you already have; this covers getting one. [[mozak-search-gates]] sizes how much
 *evidence* a question needs; this sizes how much *traffic* you may generate to get it — a
 separate budget with a separate owner, the host itself.
 
 **Vocabulary, deliberately kept apart:** the steps here are **rungs**, `T0`–`T6`. The
-**tiers** of [[search-gates]] are stakes. The scales are independent — a tier-1 question can
+**tiers** of [[mozak-search-gates]] are stakes. The scales are independent — a tier-1 question can
 honestly cost forty requests to one paginated API, and a tier-3 question can be answered by
 three primary PDFs.
 
@@ -216,7 +217,7 @@ general availability are contradicted by Cloudflare's own changelog.
 ## Acquisition budget
 
 This budget binds the **session, not a tool** — it applies equally to a recipe, a hand-typed
-`curl`, and a harness's built-in fetch, exactly as [[search-gates]] binds the session
+`curl`, and a harness's built-in fetch, exactly as [[mozak-search-gates]] binds the session
 regardless of which search tool it uses. Defaults live in `tools/recipes/policy.py` and are
 overridable per-instance; the effective values are recorded in every fetch.
 
@@ -233,13 +234,13 @@ requests, and a conditional request that returns 304 costs the origin almost not
 **Stop fetching** when the pages budget is spent, when three consecutive fetches add no new
 claims, when the host returns 429/403 (back off, then escalate a rung deliberately or stop —
 never retry harder), or when the question is answerable. Record which gate fired, per
-[[search-gates]]'s recorded-stop rule.
+[[mozak-search-gates]]'s recorded-stop rule.
 
 ## Where fetched bytes live
 
 Every machine fetch lands in `_generated/fetch/` — gitignored, derived, disposable, with **no
 drain obligation**. That is the point: the live web is an external resource, referenced and
-never imported ([[store-the-delta]]), and **a cache changes dereference latency, not
+never imported ([[mozak-store-the-delta]]), and **a cache changes dereference latency, not
 admission**. Delete the directory at any time and nothing is lost; the URL is the source of
 truth.
 
@@ -249,7 +250,7 @@ as a HAR export, drained once and then removed. The line between the two is who 
 **Nothing in this layer can write into the graph.** No recipe may author `pages/`, `sources/`,
 `journals/` or `archive/` — the rule lives in `tools/recipes/README.md`. `sources/` stays the
 only door, and passing through it is still one authored capture per source: the two-pass toll
-of [[store-the-delta]], untouched by making fetching cheap. `archive/` is closed the same way
+of [[mozak-store-the-delta]], untouched by making fetching cheap. `archive/` is closed the same way
 by an existing rule, since every entry must be named after its fronting note's stem.
 
 Volume that does happen is on the record: `_generated/fetch/fetch.sqlite` logs every attempt
@@ -284,7 +285,7 @@ history and process tables — never use it.
 - [[2026-09-09-web-acquisition-research]] — the measured probes behind the "UA spoofing is
   useless" and "archives recover blocked pages" claims, the anti-bot benchmark, and the legal
   citations with their per-claim evidence grading and unverified list.
-- [[ingestion-toolchain]] — the tool policy this page's rungs obey (probe first, degrade
+- [[mozak-ingestion-toolchain]] — the tool policy this page's rungs obey (probe first, degrade
   loudly, run fetches locally) and the drain recipes that take over once bytes exist.
-- [[store-the-delta]] — the admission doctrine that makes the cache disposable and keeps the
+- [[mozak-store-the-delta]] — the admission doctrine that makes the cache disposable and keeps the
   two-pass toll on the graph's door rather than on fetching.

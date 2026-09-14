@@ -65,7 +65,7 @@ DEFAULTS = {
 # instance's file is an instance of it, and a test asserts its keys match DEFAULTS.
 TEMPLATE = '''# Web-acquisition policy — read by tools/recipes/policy.py.
 # Local-only, gitignored, never upstreamed. The agent created this skeleton and will
-# never fill a user field in it. Rationale for each knob: pages/web-acquisition-ladder.md
+# never fill a user field in it. Rationale for each knob: pages/mozak-web-acquisition-ladder.md
 #
 # Scope: these govern ACQUISITION BEHAVIOUR ONLY. They cannot loosen AGENTS rule 10
 # (never publish outward), the .private/ never-read rule, or the two-pass capture toll.

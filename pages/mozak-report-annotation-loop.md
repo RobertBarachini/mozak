@@ -1,5 +1,6 @@
 ---
 title: The report annotation loop — re-prompt a render, distill back
+aliases: [report-annotation-loop]
 type: note
 domain: [meta]
 tags: [workflow]
@@ -10,11 +11,11 @@ status: growing
 
 # The report annotation loop — re-prompt a render, distill back
 
-A render is a one-way projection of the graph outward ([[research-flow]], its
+A render is a one-way projection of the graph outward ([[mozak-research-flow]], its
 "Synthesizing outward" section) — useful until you want to talk back to it. This
 note is the contract for talking back: highlight passages in a rendered HTML report,
 attach a follow-up prompt to each, and drain those prompts into the graph. It is the
-"re-prompt" verb of [[research-flow]] step 7 aimed at a *render* instead of the graph,
+"re-prompt" verb of [[mozak-research-flow]] step 7 aimed at a *render* instead of the graph,
 which closes the loop research → render → sharper research.
 
 ## Capture — `tools/annotate.py`
@@ -62,15 +63,15 @@ any harness runs it identically:
    pending`, the MCP `list_annotations status=pending`, or a `grep`). The capture server
    need not be running.
 2. **Work** each prompt (answer, verify a claim, expand a passage, find a
-   contradiction) under the usual discipline: scope the effort by [[search-gates]], and
-   on any conflict follow [[claim-level-provenance]] (contested first, adversarial both
+   contradiction) under the usual discipline: scope the effort by [[mozak-search-gates]], and
+   on any conflict follow [[mozak-claim-level-provenance]] (contested first, adversarial both
    ways). The entry's quote and section pin exactly which passage it concerns. For a drain
    you expect to take a while (a verification, a long synthesis), you may first flip the
    heading to `[processing]` so a watched live page shows work in flight — it's an optional,
    transient courtesy (reset on server restart), not load-bearing; a quick answer can skip
    straight to step 4.
 3. **Distill** durable results into `pages/` under the admission test (AGENTS rule 5,
-   [[store-the-delta]]), with contextual links (rule 4) and claim anchors (rule 8) —
+   [[mozak-store-the-delta]]), with contextual links (rule 4) and claim anchors (rule 8) —
    never leave an insight only in the disposable `annotations.md`.
 4. **Record back**: append the `**Agent:**` line *immediately after the open
    `**Prompt:**`* it answers (so the pair folds correctly), wikilinking the notes touched;
@@ -78,7 +79,7 @@ any harness runs it identically:
    (a multi-turn thread with a later unanswered follow-up stays `[pending]`). The file
    becomes a ledger of the whole conversation, not just the last exchange.
 5. **Journal** the pass, naming the notes — the same render-provenance rule that lets a
-   disposable render be discarded safely ([[research-flow]], "Synthesizing outward").
+   disposable render be discarded safely ([[mozak-research-flow]], "Synthesizing outward").
 6. **Optionally re-render** from the now-richer graph; reopening the tool re-anchors
    surviving annotations by quote and flags any casualties as `orphaned`. **Re-render vs.
    edit in place:** re-rendering is the default — the render is disposable and regenerable
@@ -127,7 +128,7 @@ still the file, not an API.
 ## Why the tool holds no AI (harness-agnostic by construction)
 
 The capture tool writes a file and serves a page; all intelligence lives in whatever
-drains the file. That keeps the AI harness a [[plain-text-knowledge-graphs|replaceable
+drains the file. That keeps the AI harness a [[mozak-plain-text-knowledge-graphs|replaceable
 lens]] just like a viewer or `grep`: swap Claude Code for another agent, a script, or a
 local model and neither the tool nor the file format changes, because the seam is data,
 not code. Convenience lenses over the same file — a Claude Code `/drain-report` skill,

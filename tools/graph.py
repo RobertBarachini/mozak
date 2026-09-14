@@ -8,9 +8,11 @@ Usage:
   python3 tools/graph.py check                # lint links, write _generated/links.json
   python3 tools/graph.py backlinks <stem>     # who links to <stem>, with context lines
   python3 tools/graph.py rename <old> <new>   # rename a note + rewrite all references
+  python3 tools/graph.py migrate              # in an instance, after a pull: repoint your links to stems the template renamed
   python3 tools/graph.py tags [tag]           # all frontmatter tags, or notes carrying one
   python3 tools/graph.py domains [domain]     # derived domain index (frontmatter `domain:`), or one domain's notes
-  python3 tools/graph.py ownership            # in an instance: flag locally-authored template-owned files + stem collisions
+  python3 tools/graph.py ownership            # in an instance: flag locally-authored template-owned files, stem collisions, reserved stems
+  python3 tools/graph.py ownership --template # in the template: verify the shipping convention (mozak- prefix, rename ledger)
 
 Notes are the .md files under pages/, journals/, sources/ (README.md excluded).
 A wikilink target is a note's filename stem; stems must be unique repo-wide.
@@ -30,6 +32,8 @@ TAGS_RE = re.compile(r"^tags:\s*\[([^\]]*)\]", re.M)
 DOMAIN_RE = re.compile(r"^domain:\s*\[([^\]]*)\]", re.M)
 NOTE_DIRS = ("pages", "journals", "sources")
 BIRTH_SEEDS = ("pages/start-here.md",)  # template-shipped pages that are instance-owned (SYNC)
+RESERVED_PREFIX = "mozak-"  # every shipped page carries it; a token no research topic coins (AGENTS `pages/` row)
+MIGRATIONS = "tools/migrations/renames.tsv"  # shipped stem renames, replayed by `migrate` (AGENTS rule 6)
 
 
 def md_files(root: Path):
@@ -164,6 +168,17 @@ def cmd_check(root: Path) -> int:
         print(f"  DUPLICATE stem '{stem}': {kept} vs {dupe}")
     for b in broken:
         print(f"  BROKEN {b['in']} -> [[{b['target']}]]")
+    if broken:                 # stale links to a stem the template renamed have a one-command fix
+        try:
+            chain = resolve_chain(load_migrations(root))
+            stale = sorted({b["target"] for b in broken
+                            if b["target"] not in notes and chain.get(b["target"]) in notes})
+        except ValueError:
+            stale = []
+        if stale:
+            print(f"  hint: {len(stale)} broken target(s) are stems the template renamed "
+                  f"({', '.join(stale)}) — run `python3 tools/graph.py migrate`, then check again "
+                  "(AGENTS rule 6, SYNC pull ritual)")
     for s in sloppy:
         print(f"  note: {s['in']} writes [[{s['wrote']}]] (resolves to [[{s['actual']}]] — normalize)")
     for o in orphans:
@@ -216,6 +231,123 @@ def cmd_rename(root: Path, old: str, new: str) -> int:
     return 0
 
 
+def load_migrations(root: Path):
+    """Shipped stem renames, oldest first, as [(date, old, new)] from the ledger
+    (tab-separated; blank lines and `#` comments skipped). No ledger ⇒ []. A malformed
+    row raises ValueError — callers decide whether that wedges them."""
+    p = root / MIGRATIONS
+    if not p.is_file():
+        return []
+    rows = []
+    for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        parts = [t.strip() for t in s.split("\t")]
+        if len(parts) != 3 or not all(parts):
+            raise ValueError(f"{MIGRATIONS}:{i}: expected date<TAB>old-stem<TAB>new-stem, got {line!r}")
+        rows.append(tuple(parts))
+    return rows
+
+
+def resolve_chain(rows):
+    """{old: final} — follow a→b, b→c to c, so a link written before two renames still
+    lands on the stem that exists today. Cycles stop at the first repeat."""
+    nxt = {o: n for _, o, n in rows}
+    out = {}
+    for o in nxt:
+        cur, seen = o, set()
+        while cur in nxt and cur not in seen:
+            seen.add(cur)
+            cur = nxt[cur]
+        out[o] = cur
+    return out
+
+
+def reserved_violations(local_paths, roster):
+    """Local `pages/mozak-*.md` outside the template roster: a stem an instance coined
+    inside the reserved prefix (AGENTS `pages/` row). Pure, for the ownership guard."""
+    return sorted(p for p in local_paths
+                  if Path(p).stem.startswith(RESERVED_PREFIX)
+                  and p not in roster and p not in BIRTH_SEEDS)
+
+
+def template_convention(root: Path):
+    """Problems with the template's shipping convention, [] when clean: every pages/*.md
+    except birth seeds and `moc-*` hubs carries RESERVED_PREFIX; the ledger parses; each
+    ledger row's final stem exists and its old stem does not. Run in the template only —
+    an instance's own pages legitimately lack the prefix."""
+    problems = []
+    notes, _ = load(root)
+    pages = root / "pages"
+    for p in sorted(pages.glob("*.md")) if pages.is_dir() else []:
+        rel = f"pages/{p.name}"
+        if rel in BIRTH_SEEDS or p.stem.startswith("moc-") or p.stem.startswith(RESERVED_PREFIX):
+            continue
+        problems.append(f"{rel}: shipped page without the `{RESERVED_PREFIX}` prefix")
+    try:
+        rows = load_migrations(root)
+    except ValueError as e:
+        return problems + [str(e)]
+    chain = resolve_chain(rows)
+    for _, o, n in rows:
+        if n != slugify(n):
+            problems.append(f"{MIGRATIONS}: '{n}' is not kebab-case")
+        if chain[o] not in notes:
+            problems.append(f"{MIGRATIONS}: {o} -> {n}: no note '{chain[o]}' exists")
+        if o in notes:
+            problems.append(f"{MIGRATIONS}: {o} -> {n}: old stem '{o}' still exists")
+    return problems
+
+
+def cmd_migrate(root: Path) -> int:
+    """Instance side of a shipped stem rename (AGENTS rule 6, SYNC pull ritual). The pull
+    already moved the template's file; what is left stale is the instance's own `[[old]]`
+    links, which `rename` cannot fix because the old note is gone. For every ledger row
+    whose final stem exists here while the old stem does not, rewrite `[[old]]`,
+    `[[old|…]]` and `[[old#…]]` across the note directories. A row whose old stem still
+    exists is left alone — that note is the instance's own, and so are links to it.
+    Idempotent: a second run rewrites nothing."""
+    try:
+        rows = load_migrations(root)
+    except ValueError as e:
+        sys.exit(f"error: {e}")
+    if not rows:
+        print(f"migrate: no ledger at {MIGRATIONS} — nothing to replay")
+        return 0
+    notes, _ = load(root)
+    chain = resolve_chain(rows)
+    todo = [(o, n) for o, n in chain.items() if n in notes and o not in notes and o != n]
+    for o, n in sorted(chain.items()):
+        if o in notes and n in notes and o != n:
+            print(f"migrate: [[{o}]] left alone — a local note with that stem exists, so links "
+                  f"to it are yours (the template's page is [[{n}]])")
+    if not todo:
+        print(f"migrate: nothing pending — {len(rows)} ledger row(s), all applied or not yet pulled")
+        return 0
+    pats = [(o, n, re.compile(r"\[\[" + re.escape(o) + r"(?=[\]#\|])")) for o, n in todo]
+    hits = {o: 0 for o, _ in todo}
+    touched = 0
+    for p in md_files(root):
+        text = p.read_text(encoding="utf-8")
+        text2 = text
+        for o, n, pat in pats:
+            text2, k = pat.subn("[[" + n, text2)
+            hits[o] += k
+        if text2 != text:
+            p.write_text(text2, encoding="utf-8")
+            touched += 1
+            print(f"rewrote {p.relative_to(root)}")
+    for o, n in todo:
+        if hits[o]:
+            print(f"migrate: [[{o}]] -> [[{n}]]  ({hits[o]} link(s))")
+    if not touched:
+        print("migrate: nothing pending — no stale links to renamed stems")
+        return 0
+    print(f"{touched} file(s) rewritten. Now run: python3 tools/graph.py check")
+    return 0
+
+
 def _git(root: Path, *args):
     """Run git in `root`; return stdout str, or None on any failure (git missing, not a
     repo, non-zero exit). Ownership degrades to a no-op rather than erroring."""
@@ -255,7 +387,7 @@ def parse_ownership(root: Path):
 
 
 def cmd_ownership(root: Path, strict=False, template_ref="template/main",
-                  verbose=True, upstream_reminders=False) -> int:
+                  verbose=True, upstream_reminders=False, template_mode=False) -> int:
     """In an INSTANCE (a repo with a `template` remote), flag template-owned files the
     instance authored locally — a boundary violation (SYNC Ownership table). The
     template-shipped meta pages are covered via a dynamic roster (ls-tree of the
@@ -264,7 +396,19 @@ def cmd_ownership(root: Path, strict=False, template_ref="template/main",
     template ref is a sync receipt, never flagged (a pull-in-progress stays clean).
     A flagged roster page absent at the merge-base is reported as STEM-COLLISION
     (rename the local note before merging) rather than OWNED-EDIT.
-    No-op (exit 0) in the template repo, or when no template baseline is available."""
+    A local `pages/mozak-*.md` outside the roster is RESERVED-STEM: the prefix belongs to
+    template-shipped pages (AGENTS `pages/` row).
+    No-op (exit 0) in the template repo, or when no template baseline is available —
+    except with `template_mode`, the template's own check of its shipping convention
+    (`template_convention`), which is never inferred: an instance's CI checkout also has
+    no `template` remote, so the caller says which repo this is."""
+    if template_mode:
+        problems = template_convention(root)
+        print(f"ownership --template: {len(problems)} convention problem(s)"
+              + ("" if problems else f" — every shipped page carries `{RESERVED_PREFIX}`, ledger consistent"))
+        for pr in problems:
+            print(f"  {pr}")
+        return 1 if problems else 0
     remotes = _git(root, "remote")
     if remotes is None:
         if verbose:
@@ -320,13 +464,23 @@ def cmd_ownership(root: Path, strict=False, template_ref="template/main",
     # coined the stem before the template shipped it), not an edit of a template page.
     collisions = sorted(c for c in candidates
                         if c in meta_pages and not in_tree(mb, c) and (root / c).exists())
-    violations = sorted(candidates - set(collisions))
+    # A local pages/mozak-*.md the template does not ship coins a reserved stem — listed
+    # from disk, so an uncommitted file is caught too.
+    pages_dir = root / "pages"
+    local_pages = sorted(f"pages/{p.name}" for p in pages_dir.glob("*.md")) if pages_dir.is_dir() else []
+    reserved = reserved_violations(local_pages, meta_pages)
+    violations = sorted(candidates - set(collisions) - set(reserved))
 
-    if violations or collisions or verbose:
+    if violations or collisions or reserved or verbose:
         print(f"ownership: {len(violations)} template-owned file(s) authored locally"
-              + (f", {len(collisions)} stem collision(s)" if collisions else ""))
+              + (f", {len(collisions)} stem collision(s)" if collisions else "")
+              + (f", {len(reserved)} reserved stem(s)" if reserved else ""))
     for v in violations:
         print(f"  OWNED-EDIT {v}")
+    for r in reserved:
+        print(f"  RESERVED-STEM {r} — the `{RESERVED_PREFIX}` prefix is reserved for template-shipped "
+              f"pages (AGENTS `pages/` row); rename the local note "
+              f"(`python3 tools/graph.py rename {Path(r).stem} <new-stem>`).")
     for c in collisions:
         print(f"  STEM-COLLISION {c} — the template ships this stem; rename the local "
               f"note first (`python3 tools/graph.py rename {Path(c).stem} <new-stem>`), "
@@ -340,7 +494,7 @@ def cmd_ownership(root: Path, strict=False, template_ref="template/main",
         for s in sorted((changed(shared, mb, "HEAD") or set()) | (changed(shared, "HEAD") or set())):
             print(f"  shared-evolving changed (upstream any generic improvement): {s}")
 
-    return 1 if (violations and strict) else 0
+    return 1 if ((violations or reserved) and strict) else 0
 
 
 def main() -> int:
@@ -354,6 +508,7 @@ def main() -> int:
     p_ren = sub.add_parser("rename")
     p_ren.add_argument("old")
     p_ren.add_argument("new")
+    sub.add_parser("migrate")
     p_tags = sub.add_parser("tags")
     p_tags.add_argument("tag", nargs="?", default=None)
     p_dom = sub.add_parser("domains")
@@ -362,9 +517,13 @@ def main() -> int:
     p_own.add_argument("--strict", action="store_true")
     p_own.add_argument("--template-ref", default="template/main")
     p_own.add_argument("--upstream-reminders", action="store_true")
+    p_own.add_argument("--template", action="store_true",
+                       help="this checkout IS the template: verify the shipping convention instead")
     args = ap.parse_args()
     if args.cmd == "check":
         return cmd_check(args.root)
+    if args.cmd == "migrate":
+        return cmd_migrate(args.root)
     if args.cmd == "backlinks":
         return cmd_backlinks(args.root, args.stem)
     if args.cmd == "tags":
@@ -374,7 +533,8 @@ def main() -> int:
     if args.cmd == "ownership":
         return cmd_ownership(args.root, strict=args.strict,
                              template_ref=args.template_ref,
-                             upstream_reminders=args.upstream_reminders)
+                             upstream_reminders=args.upstream_reminders,
+                             template_mode=args.template)
     return cmd_rename(args.root, args.old, args.new)
 
 

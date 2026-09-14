@@ -76,10 +76,10 @@ archive, per the privacy boundary in SYNC.md.
 
 ## Distilled into
 
-- [[plain-text-knowledge-graphs]] — the survivability argument.
-- [[system-lineage]] — the per-convention genealogy (each row's citation is above).
-- [[research-flow]] — the two-pass shape and run-locally constraint.
-- [[ingestion-toolchain]] — the verified transcript-pipeline behaviors.
-- [[store-the-delta]] — the admission stance's Zettelkasten/evergreen grounding.
-- Methodological mirror for [[claim-level-provenance]] and [[search-gates]]
+- [[mozak-plain-text-knowledge-graphs]] — the survivability argument.
+- [[mozak-system-lineage]] — the per-convention genealogy (each row's citation is above).
+- [[mozak-research-flow]] — the two-pass shape and run-locally constraint.
+- [[mozak-ingestion-toolchain]] — the verified transcript-pipeline behaviors.
+- [[mozak-store-the-delta]] — the admission stance's Zettelkasten/evergreen grounding.
+- Methodological mirror for [[mozak-claim-level-provenance]] and [[mozak-search-gates]]
   (the 3-vote refutation protocol and saturation-bounded sweep).

@@ -14,30 +14,30 @@ reasoning behind them.
 
 ## Design
 
-- [[plain-text-knowledge-graphs]] — the core argument: plain text + derived
+- [[mozak-plain-text-knowledge-graphs]] — the core argument: plain text + derived
   backlinks outlive any tool.
-- [[system-lineage]] — which system each convention was inherited from, and what
+- [[mozak-system-lineage]] — which system each convention was inherited from, and what
   was deliberately rejected.
-- [[open-knowledge-format]] — adjacent industry format (Google, 2026-06):
+- [[mozak-open-knowledge-format]] — adjacent industry format (Google, 2026-06):
   convergent validation of the plain-text bet; watched as an interchange bridge,
   not adopted.
-- [[store-the-delta]] — what earns storage: the graph holds the delta between the
+- [[mozak-store-the-delta]] — what earns storage: the graph holds the delta between the
   world's knowledge and yours (the anti-collector's-fallacy admission test).
 
 ## Operating
 
-- [[research-flow]] — the end-to-end loop from research question to re-promptable
+- [[mozak-research-flow]] — the end-to-end loop from research question to re-promptable
   knowledge, and the boundary with project repos.
-- [[report-annotation-loop]] — the talk-back verb for renders: annotate a rendered
-  report, then drain the prompts back into the graph (research-flow step 7, aimed at a
+- [[mozak-report-annotation-loop]] — the talk-back verb for renders: annotate a rendered
+  report, then drain the prompts back into the graph (mozak-research-flow step 7, aimed at a
   render).
-- [[ingestion-toolchain]] — tool policy (probe first, offer-install, degrade
+- [[mozak-ingestion-toolchain]] — tool policy (probe first, offer-install, degrade
   loudly) and per-format recipes for draining `raw/`.
-- [[claim-level-provenance]] — cite at the claim, repair surgically; the
+- [[mozak-claim-level-provenance]] — cite at the claim, repair surgically; the
   contradiction protocol (contested first → adversarial both ways →
   struck-through losers, titles never assert falsehoods).
-- [[search-gates]] — stakes-tiered breadth/depth, source independence, and the
+- [[mozak-search-gates]] — stakes-tiered breadth/depth, source independence, and the
   recorded stop signals.
-- [[web-acquisition-ladder]] — how to *get* the bytes search-gates decides you need:
+- [[mozak-web-acquisition-ladder]] — how to *get* the bytes mozak-search-gates decides you need:
   seven rungs from official API to human-in-the-loop, the honesty-as-access-strategy
   argument, and the user's own-context posture toggle with its consent walkthrough.

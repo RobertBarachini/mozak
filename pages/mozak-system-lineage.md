@@ -1,5 +1,6 @@
 ---
 title: Lineage — where each convention of this system comes from
+aliases: [system-lineage]
 type: note
 domain: [meta]
 tags: [design]
@@ -13,7 +14,7 @@ status: evergreen
 Nothing here was invented for this repo, and almost nothing is app-specific: each
 convention is an inherited standard chosen because at least two independent
 ecosystems already parse it — the survivability argument made in
-[[plain-text-knowledge-graphs]]. What looks "Obsidian-flavored" is really the set of
+[[mozak-plain-text-knowledge-graphs]]. What looks "Obsidian-flavored" is really the set of
 pre-existing standards Obsidian itself adopted.
 
 | Convention | Lineage | Why kept |
@@ -35,7 +36,7 @@ pre-existing standards Obsidian itself adopted.
 
 Deliberately rejected: PARA-as-folders and Johnny.Decimal numbering (hierarchy
 walls off cross-domain links — the associative principle in
-[[plain-text-knowledge-graphs]] wins); Logseq outliner authoring (block model
+[[mozak-plain-text-knowledge-graphs]] wins); Logseq outliner authoring (block model
 resists flat-markdown agents); storing backlinks in prose (churn + staleness);
 inline hash-tag syntax (a hash-tag is a page reference in Logseq but a separate
 tag entity in Obsidian — same text, divergent graph semantics; facets stay in

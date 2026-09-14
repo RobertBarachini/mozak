@@ -22,7 +22,7 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
 
 | Path | Role |
 |---|---|
-| `pages/` | Atomic evergreen notes — THE graph. Flat, no subfolders. One namespace, split ownership (SYNC): template-shipped meta pages are template-owned — instances annotate them by linking from their own notes, never by editing bodies; `start-here` and every other page are instance-owned. |
+| `pages/` | Atomic evergreen notes — THE graph. Flat, no subfolders. One namespace, split ownership (SYNC): template-shipped meta pages are template-owned — instances annotate them by linking from their own notes, never by editing bodies; `start-here` and every other page are instance-owned. **Reserved stem prefix:** every page the template ships is named `mozak-<stem>` (the hub `moc-meta` and the birth seed `start-here` excepted) — the project's own name, a token no research topic will coin — so a page the template ships later can never collide with a note an instance already holds; an instance never coins a `mozak-` stem, and `graph.py ownership` flags one. |
 | `journals/` | `YYYY-MM-DD.md` activity log of **this repo's own work**: what was ingested/distilled/changed in the graph (and maintenance such as syncs performed), and why. Changes to the template system itself log to `CHANGELOG.md` instead — rule 7. |
 | `sources/` | Raw captures (transcripts, articles). Immutable after distillation (append-only exceptions per ingestion step 3). |
 | `raw/` | Anytime dump zone: humans and agents drop unstructured files here with zero ceremony. NOT part of the graph — not link-indexed, no schema, and **contents are gitignored** (may hold huge blobs; transient by contract — disk backups cover the window until ingestion; only the README is tracked). Ingestion drains it (text → a proper `sources/` capture or `archive/`; binaries → `assets/`, the gitignored binary store; then the raw item is removed). Trends toward empty; `sources/` is the durable raw layer. |
@@ -31,7 +31,7 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
 | `README.md`, `SETUP.md`, `SYNC.md`, `CHANGELOG.md`, `ROADMAP.md` | Root docs: human landing page; bootstrap/ops (viewers, MCP, ingestion toolchain); template↔instance sync contract; template-system development log (rule 7); considered-and-deferred queue with the gate that re-opens each item — the changelog's forward-looking sibling, whose own header holds its entry/exit rule. |
 | `templates/` | Copy on note creation; delete the guidance comments. |
 | `conventions/` | [frontmatter-schema.md](conventions/frontmatter-schema.md) — extend it BEFORE using new fields/enums. |
-| `tools/` | `graph.py` — check / backlinks / rename / tags / domains / ownership. `annotate.py` — serve a render locally with a live-refreshing annotation overlay + capture per-passage re-prompts to `annotations.md` ([pages/report-annotation-loop.md](pages/report-annotation-loop.md)). `recipes/` — executable typed transformations with contract headers (catalog: `grep -rA4 "^# recipe:" tools/recipes/`); check there before hand-rolling, promote on second hand-roll (rule of two). **Zero-install core:** `graph.py`, `annotate.py`, the hooks, the tests and CI import Python **stdlib only** and run under a bare `python3` — a fresh clone works with nothing installed, and that must stay true. Recipes are the one ring outside that line: they may declare dependencies (external binaries, or Python packages via inline script metadata), are opt-in and standalone, and are never imported or invoked by the core — declaration mechanism, runner and fallback in [tools/recipes/README.md](tools/recipes/README.md). |
+| `tools/` | `graph.py` — check / backlinks / rename / migrate / tags / domains / ownership. `migrations/` — the append-only ledger of shipped stem renames that `migrate` replays (rule 6). `annotate.py` — serve a render locally with a live-refreshing annotation overlay + capture per-passage re-prompts to `annotations.md` ([pages/mozak-report-annotation-loop.md](pages/mozak-report-annotation-loop.md)). `recipes/` — executable typed transformations with contract headers (catalog: `grep -rA4 "^# recipe:" tools/recipes/`); check there before hand-rolling, promote on second hand-roll (rule of two). **Zero-install core:** `graph.py`, `annotate.py`, the hooks, the tests and CI import Python **stdlib only** and run under a bare `python3` — a fresh clone works with nothing installed, and that must stay true. Recipes are the one ring outside that line: they may declare dependencies (external binaries, or Python packages via inline script metadata), are opt-in and standalone, and are never imported or invoked by the core — declaration mechanism, runner and fallback in [tools/recipes/README.md](tools/recipes/README.md). |
 | `_generated/` | Derived artifacts — **all gitignored**, nothing here is source-of-truth. `links.json`: the mechanical index, never hand-edit; `check` rebuilds it before and after edits (rule 7), pulls (SYNC ritual), and clones (SETUP smoke test). `presentations/<yyyy-mm-dd>-<slug>/`: agent-rendered outputs synthesized FROM the graph (reports, HTML, PDF) — disposable renderings; any new insight they contain is distilled back into `pages/` first (a render is never an insight's only home) and every render leaves a journal line naming its source notes. |
 | `.private/` | Local-only **private zone** — the user's own notes and files. **Hard rule: the agent never reads, opens, or greps anything here unless the user explicitly approves access for that request** (it holds material the user chose to withhold from the agent). Only an empty `.gitkeep` is tracked (so the zone exists in a fresh clone); every real file is gitignored — never tracked, never in history — and nothing readable ever ships, keeping the never-read rule absolute. |
 | `.personal-shared/` | Local-only **personal context** — personal facts (name, measurements, preferences, locale) that make answers concrete, and the **personal documents** the graph reasons from but git must not hold (a contract, a letter, a statement: `archive/` is tracked, so those land here instead, fronted by a thin `sources/` capture that carries the analysis, not the specifics). **Both the user and the agent may view AND edit it**, and the agent reads/uses it freely; it maintains a top-level index of what's stored in `.personal-shared/README.md`, generating that README if absent. **Environment truth lives here and outranks probing:** the shell an agent runs in may not be the user's machine (VM, container, remote host), so `lsb_release`, package and hardware queries describe *that shell* only — read this zone before any environment-dependent claim or recommendation and treat it as authoritative, report a probe as a probe of wherever the session runs, and when the fact is missing here, ask rather than infer it from the shell. But it is **never committed**: only an empty `.gitkeep` is tracked; the README and all content stay local. The complement to `.private/`: shared with the agent, withheld from git. |
@@ -63,12 +63,16 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    YOUR processing — a claim, decision, judgment, connection, or verified finding —
    never a transcription of reference material; if the web or an encyclopedia
    already holds it, store the pointer (`resource:`/URL) plus your take, not the
-   copy ([pages/store-the-delta.md](pages/store-the-delta.md)); (b) it has a
+   copy ([pages/mozak-store-the-delta.md](pages/mozak-store-the-delta.md)); (b) it has a
    plausible re-retrieval path — it links into the existing graph with stated
    context, or serves a named open question; (c) time-bound content is scoped in
    the text ("as of 2026-07" — never "currently").
 6. **Never rename by hand.** `python3 tools/graph.py rename <old> <new>` rewrites
    every reference, then re-run `check`. Prefer adding `aliases:` over renaming.
+   A shipped stem the template renames is also appended to `tools/migrations/renames.tsv`,
+   and an instance replays that ledger with `python3 tools/graph.py migrate` after each
+   pull (SYNC ritual): the pull moves the file, `migrate` repoints the instance's own
+   links, and `check` names the stale ones until it runs.
    Deleting a note: re-point or remove every reference first (a dangling link
    fails `check`), then journal what was deleted and why.
 7. **Bracket the session with `check`.** `python3 tools/graph.py check` regenerates the
@@ -101,14 +105,14 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
 8. **Provenance & contradiction discipline.** Load-bearing factual claims carry
    their origin inline — "…claim ([[capture-stem]])" — so backlinks + anchors make
    repair surgical when a source proves partially wrong
-   ([pages/claim-level-provenance.md](pages/claim-level-provenance.md)). On
+   ([pages/mozak-claim-level-provenance.md](pages/mozak-claim-level-provenance.md)). On
    contradicting evidence: set `status: contested` FIRST, adversarially search
    both sides, then rewrite so the title and opening state the best current
    understanding — superseded claims stay, struck through with date + refuting
    anchor; never silently delete the loser, never let a title assert a falsehood.
    Captures are never edited — flaws get an appended dated `## Reliability notes`
    (the step-3 append-only regime). Journal the episode. Scale and stop searches
-   by the gates in [pages/search-gates.md](pages/search-gates.md).
+   by the gates in [pages/mozak-search-gates.md](pages/mozak-search-gates.md).
 9. **Conventions have one home each.** Every rule and decision is stated
    normatively in exactly ONE place (an AGENTS rule, a schema row, a SYNC
    section); everywhere else points — "per rule 8", "per ingestion step 3" —
@@ -117,7 +121,7 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    the concept's key terms; update or consciously confirm every hit; log the sweep
    where rule 7 routes it. Avoid enumerations a directory listing can answer (an example list rots
    the moment the next item lands); prefer deleting a copy over maintaining one.
-   This is [pages/claim-level-provenance.md](pages/claim-level-provenance.md)
+   This is [pages/mozak-claim-level-provenance.md](pages/mozak-claim-level-provenance.md)
    applied to the system's own rules.
 10. **Never publish outward without explicit authorization.** Renders — presentations,
    reports, HTML/PDF, slide decks — are LOCAL artifacts: they belong in `_generated/`
@@ -136,7 +140,7 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    Drain `raw/` first — anything dumped there becomes a capture (or is discarded
    with a journal note), then the raw item is removed. Tool policy (probe first,
    offer-install, degrade loudly) and per-format drain recipes:
-   [pages/ingestion-toolchain.md](pages/ingestion-toolchain.md).
+   [pages/mozak-ingestion-toolchain.md](pages/mozak-ingestion-toolchain.md).
 2. **Distill** → create/update `pages/` notes. Update `updated:`; promote `status:`
    when a revisit deepens a note (seed → growing → evergreen).
 3. **Link** — weave new notes into the existing graph contextually (rule 4), update

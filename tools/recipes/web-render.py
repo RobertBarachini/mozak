@@ -11,7 +11,7 @@
 # ///
 """Rung T4/T5 — a real browser that belongs to the repo, not to you.
 
-The sandbox contract (pages/web-acquisition-ladder.md), enforced here rather than
+The sandbox contract (pages/mozak-web-acquisition-ladder.md), enforced here rather than
 described:
 
 * **Playwright's own Chromium**, never your daily browser, never the snap — the

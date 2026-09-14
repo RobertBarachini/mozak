@@ -1,5 +1,6 @@
 ---
 title: Ingestion toolchain — tool policy and raw/ drain recipes
+aliases: [ingestion-toolchain]
 type: note
 domain: [meta]
 tags: [workflow, tooling]
@@ -10,7 +11,7 @@ status: growing
 
 # Ingestion toolchain — tool policy and raw/ drain recipes
 
-Operational knowledge for the gather/capture steps of [[research-flow]]: what to
+Operational knowledge for the gather/capture steps of [[mozak-research-flow]]: what to
 reach for when draining `raw/`, and how to behave when a tool is missing. Agents
 already know these tools — this note encodes the house policy and the nudge, so
 sessions behave consistently instead of each rediscovering an approach.
@@ -27,12 +28,12 @@ sessions behave consistently instead of each rediscovering an approach.
    stating so in the capture and journal. Never fake or skip a result quietly.
 3. **Run fetches locally** — YouTube and friends block cloud/datacenter IPs.
 4. **Never modify raw originals in place** — conversions produce new files; the
-   raw item is removed only after its capture is complete (per [[research-flow]]).
+   raw item is removed only after its capture is complete (per [[mozak-research-flow]]).
 5. **Fetch politely, escalate deliberately.** Getting bytes off a host you don't control
    is its own discipline with its own budget — start at the cheapest rung, escalate only
    on a recorded failure, treat the host's answers as answers, and record which rung produced
    the capture.
-   The rungs, the budget and the legal line live in [[web-acquisition-ladder]]; this page
+   The rungs, the budget and the legal line live in [[mozak-web-acquisition-ladder]]; this page
    picks up once a file exists.
 
 ## Roster — when to reach for what
@@ -47,7 +48,7 @@ sessions behave consistently instead of each rediscovering an approach.
 | `file`, `iconv` | Identify unknown raw items; fix text encodings (Windows-125x exports and similar) |
 | `jq`, `unzip` / `tar` | Explore JSON dumps; unpack archives (then recurse the drain over the contents) |
 | `curl` / `wget` | One-off fetches and probing. For anything that should leave provenance, prefer the recipe below |
-| `tools/recipes/web-fetch.py` | URL → extracted markdown + a provenance record, recording robots and honouring the fetch budget; `--probe` reports a host's official access paths instead of fetching. Rungs T0–T2, stdlib, no installs ([[web-acquisition-ladder]]) |
+| `tools/recipes/web-fetch.py` | URL → extracted markdown + a provenance record, recording robots and honouring the fetch budget; `--probe` reports a host's official access paths instead of fetching. Rungs T0–T2, stdlib, no installs ([[mozak-web-acquisition-ladder]]) |
 | `tools/recipes/scholar-lookup.py` | DOI / arXiv id / title → capture-ready frontmatter + the open-access copy, from Crossref, OpenAlex, arXiv (and Unpaywall if you set a contact). Rung T0 for papers: registries, never the publisher's page |
 | `tools/recipes/web-worklist.py` | Multi-page work without a crawler: `add <url> --why`, `show`, `run --yes` — the agent's chosen references become targeted pulls, capped by the budget, each row carrying its reason |
 | `tools/recipes/web-har-harvest.py` | A HAR you exported (`raw/`) → document responses into the store, credentials discarded by construction. Rung T6; consent only |
@@ -75,7 +76,7 @@ rolling-duplicate cleanup below).
   capture; keep the PDF itself in `assets/` only if its fidelity matters.
 - **A live URL** → don't hand-roll it: `python3 tools/recipes/web-fetch.py <url>` (rung
   T0–T2 — checks official access paths first, records robots, caches, records provenance).
-  Escalate rungs only per [[web-acquisition-ladder]].
+  Escalate rungs only per [[mozak-web-acquisition-ladder]].
 - **Saved HTML / office docs** → pandoc to Markdown with the flags in the roster; strip
   navigation boilerplate. A saved page keeps its own chrome, so extraction still applies.
 - **Archives** → unpack inside `raw/`, recurse per extracted item.
