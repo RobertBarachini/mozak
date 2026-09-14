@@ -78,6 +78,30 @@ class PastedBlock(unittest.TestCase):
             self.assertEqual(r.returncode, 0, cmd)
 
 
+class Openers(unittest.TestCase):
+    """`What people ask it` answers "what do I even do with this" between the handoff and the
+    explanation: bold-led bullets, each carrying a quoted prompt and what it became."""
+
+    HEADING = "## 💡 What people ask it"
+
+    def test_sits_between_handoff_and_explanation(self):
+        self.assertLess(README.index(HEADING), README.index(self.HEADING))
+        self.assertLess(README.index(self.HEADING), README.index("## What this is"))
+        self.assertIn(f"]({_anchor(self.HEADING)})", README, "nav links to it")
+
+    def test_each_opener_is_a_bare_typeable_prompt(self):
+        """One quoted prompt per line — no labels, no outcome clauses, no counts (author's
+        call: list examples, not what each produced)."""
+        section = README[README.index(self.HEADING):README.index("## What this is")]
+        lines = [l for l in section.splitlines() if l.startswith("- ")]
+        self.assertGreaterEqual(len(lines), 8)
+        for l in lines:
+            m = re.fullmatch(r'- \*"(.+)"\*', l)
+            self.assertIsNotNone(m, f"not a bare quoted prompt: {l[:60]}")
+            self.assertGreater(len(m.group(1)), 40, "a prompt you could actually type")
+            self.assertNotRegex(l, r"\d+\s+notes|→", "outcome clauses were dropped by design")
+
+
 class TemplateMarker(unittest.TestCase):
     def test_marker_survives_in_the_template_readme(self):
         spec = importlib.util.spec_from_file_location("bs", ROOT / "tools" / "bootstrap.py")

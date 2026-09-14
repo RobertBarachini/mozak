@@ -14,6 +14,25 @@ in its own journal.
 
 Newest first.
 
+## 2026-09-15
+
+- **README gains *What people ask it* — thirteen openers from a live instance's first ten
+  weeks.** The handoff block fixed "how do I start"; this answers "what do I even do with it",
+  with evidence rather than a feature list: one instance, eight domains, 217 notes, 58
+  captures, four rendered briefings, and every domain begun as a single sentence typed into an
+  agent. Each entry is the prompt as you would type it and nothing else — a first draft carried
+  what each became, with note counts, and the author cut it: the list is there to show what one
+  can ask, and the README's *One loop, end to end* already shows one outcome in full.
+  Generalised per the SYNC privacy boundary — topics, not particulars: nothing names a place,
+  a product, a party or a person. Kept in the README rather than a meta page because the reader who
+  needs it has not opened the repo yet. Two closing paragraphs: how the questions compound —
+  overlapping ones started from earlier captures rather than from zero, the difference from a
+  chat window that forgets when the tab closes — and, for the sceptic, how an answer is
+  captured, cited, verified and kept. Also corrected: the SYNC birth-seed exception written
+  yesterday called any incoming `start-here.md` change beyond a link retarget "a template
+  mistake to report"; it is the template improving the seed for future instances, resolved
+  keep-ours as the register already said.
+
 ## 2026-09-14
 
 - **The README hands a fresh clone to an agent in one paste, and `tools/bootstrap.py` makes

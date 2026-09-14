@@ -15,6 +15,7 @@
 [![Core tooling](https://img.shields.io/badge/core_tooling-stdlib_only-black.svg)](tools/)
 
 [Hand it over](#-hand-it-to-your-agent) ·
+[What to ask](#-what-people-ask-it) ·
 [What this is](#what-this-is) ·
 [Orientation](#-orientation) ·
 [One loop, end to end](#-one-loop-end-to-end) ·
@@ -62,17 +63,53 @@ something."
 
 What happens next: it clones into a folder you name, installs nothing, runs the checks, asks
 you a few questions it will never answer for you, and says **Ready**. About two minutes. Then
-talk to it, for example:
-
-- *"Research X — capture your sources, distill what matters into the graph."*
-- *"Ingest this video / article / PDF: `<url>`."*
-- *"Render me a briefing on Y from what the graph knows, and let me annotate it."*
+talk to it — [what people ask it](#-what-people-ask-it) lists the openers one instance started
+with.
 
 No agent that can run commands yet? Do the first step yourself —
 `git clone https://github.com/RobertBarachini/mozak.git mybrain` — then open the folder in one
 that can, and paste the block. Clone rather than pressing GitHub's *"Use this template"*
 button: it copies files with an unrelated history and no `template` remote, which severs the
 ancestry the [SYNC.md](SYNC.md) pull ritual depends on ([SETUP.md](SETUP.md) §1).
+
+## 💡 What people ask it
+
+Openers from one instance's first ten weeks, roughly in the order they were asked:
+
+- *"Research long-horizon passive investing for my country and tax situation. Verify every tax figure against primary law, then brief me."*
+- *"Get local control of this air conditioner without its cloud. Rank the paths and write the protocol down."*
+- *"A repeatable yearly health baseline for someone my age: which tests earn their place, which to refuse, what to track at home."*
+- *"Before any plan: what actually keeps an exercise routine alive, and how do I build that in?"*
+- *"A weekly home training plan I will actually follow, assembled from the evidence, with the equipment I have."*
+- *"Read my body-composition scale and fitness band directly, without the vendor app, so the measurements land in my own files."*
+- *"A nutrition plan from my own measurements, revised as new ones come in."*
+- *"Read this contract: which clauses are actually enforceable, and what does each side owe when it ends?"*
+- *"Map who owns the food brands on a supermarket shelf: which labels share a parent, how that consolidated over time, and what it means for price and choice."*
+- *"A raw-photo culling workflow on Linux for thousands of near-identical burst frames. Which tools actually work?"*
+- *"Should I buy a GPU for local inference now, or wait? What does a 16 GB card actually deliver?"*
+- *"The ins and outs of a side business alongside a day job: legal form, taxes, what to register when."*
+- *"Why did syncing between my phone and PC degrade to silence? Find the cause and store what we learned."*
+
+And they compound. The health thread ran as a chain — the baseline, then the habits that
+keep a routine alive, then the training plan, then the scale and band to measure it, then
+nutrition on those measurements — each session starting from what the previous ones had
+captured, verified and linked. The scale and band question also fed the home-automation
+work (the same local-control problem as the air conditioner), and the GPU question started
+from what the photo workflow had already established about the memory market. That is the
+difference from a chat window: nothing said here goes into the void when the tab closes.
+The graph is the memory the next question starts from.
+
+Not hallucination with a filing system. Every answer is built from **captures** — the source
+text saved under `sources/` with its URL, retrieval date and how it was fetched — and every
+load-bearing claim in a note cites its capture inline, so you can open the file and check
+([claim-level provenance](pages/mozak-claim-level-provenance.md) is what makes a wrong source
+repairable). Questions with real stakes get adversarial verification, sized by the
+[search gates](pages/mozak-search-gates.md): each claim is confirmed or refuted against
+primary sources, a disagreement is marked *contested* and worked until resolved, and the losing
+claim stays in the note struck through with its refutation — never deleted. `python3
+tools/graph.py check` fails on any reference that no longer resolves. It is all plain files
+you can open, diff and grep; [one loop, end to end](#-one-loop-end-to-end) shows a real run
+with its numbers.
 
 ## What this is
 

@@ -72,7 +72,8 @@ upstreaming: strip names, dates-of-use, domain content, founding-capture wikilin
   `[[old-stem]]` → `[[mozak-old-stem]]`. That is not the template updating your seed.
   Take either side — let git auto-merge it, or keep-ours on conflict — and run
   `python3 tools/graph.py migrate`; both paths land on the same file. Any *other*
-  incoming change to `start-here.md` is a template mistake: keep yours, report it upstream.
+  incoming change to `start-here.md` is the template improving the seed for *future*
+  instances: resolve keep-ours as above — yours is yours, nothing to merge or report.
 - Instances have `journals/*.md`, their own `sources/*.md`, `archive/` content
   (e.g. a founding archive); the template ships only the directory READMEs, the
   `journals/.gitkeep`, the `.private/` and `.personal-shared/` `.gitkeep` markers,
