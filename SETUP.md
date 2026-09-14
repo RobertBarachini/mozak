@@ -15,6 +15,19 @@ Cloning (not copying) means every future `git merge template/main` is a clean
 three-way merge — see [SYNC.md](SYNC.md) for the ownership contract and rituals.
 Point the instance at its own private remote (or none at all) as `origin`.
 
+Or let the checklist drive — it is the command the README's pasted block names:
+
+```bash
+python3 tools/bootstrap.py            # §1–§3 as ✓/✗ items, each with its exact next command; exit 0 iff ready
+python3 tools/bootstrap.py --attach   # also perform the origin → template rename on a fresh clone
+python3 tools/bootstrap.py --json     # the same as data, for agents
+```
+
+It performs only what is safe unattended (the rename needs `--attach` — the template
+author's own checkout looks exactly like a fresh clone), asks nothing itself, and prints the
+questions your agent must ask you: the acquisition consent of §2 and the personal-context
+facts of §3. Re-run it until it prints `ready: yes`.
+
 ## 2. Smoke test
 
 ```bash
@@ -43,6 +56,13 @@ agent never answers for you.
 
 ## 3. Make it yours
 
+- Personal context: `bootstrap.py` leaves `.personal-shared/README.md` as an empty skeleton.
+  Your agent asks you the facts in it — how to address you, locale, preferences, whether the
+  shell it runs in is your own machine — each optional (`—` skips), records what you give, then
+  runs `python3 tools/bootstrap.py --personal-context-asked`. Nothing there is ever inferred
+  (AGENTS `.personal-shared/` row).
+- Make `pages/start-here.md` yours — the birth seed you own outright (SYNC): its front-door
+  text and `## Domains` list describe this instance.
 - Rewrite `README.md` to describe the instance (instance-owned per SYNC.md).
 - Write the founding `journals/<today>.md` entry; commit (the human commits —
   agents draft messages and stop).

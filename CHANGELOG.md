@@ -16,6 +16,32 @@ Newest first.
 
 ## 2026-09-14
 
+- **The README hands a fresh clone to an agent in one paste, and `tools/bootstrap.py` makes
+  the handoff checkable.** People landed on the README and did not know what to do with it;
+  once an agent touched the repo it oriented fine. The bottleneck was the human deciding to
+  hand it over, so the first screen now does three things in order: a three-row What / How /
+  Why table, a fenced block to copy into any agent that runs commands (GitHub's copy button
+  makes a fence one click; prose is not copyable), and a plain statement of what happens next
+  — clones into a folder you name, installs nothing, asks questions it never answers for you,
+  says Ready — plus three example first prompts. The template-versus-instance explanation
+  moved below the action under *What this is*; the old *Start an instance* section and its tip
+  callout are folded in; a back-link at the foot returns readers who read the Why first. The
+  block is a handoff, not a second procedure: it tells the agent to read AGENTS and SETUP,
+  which win over the message (rule 9). `tools/bootstrap.py` (stdlib, ring 0) is the command
+  the block names — SETUP §1–§3 as an idempotent checklist: tools present, template remote
+  attached, both gates green, the personal-context skeleton present and its questions asked, a
+  README rewritten for the instance, a journal entry of the instance's own — printing ✓/✗ per
+  item with the exact next command, exit 0 only when ready, `--json` for agents. It performs
+  only what is safe unattended: `--attach` renames `origin` to `template` when origin points at
+  a repo named mozak (never by default — the template author's own checkout looks identical to
+  a fresh clone); `.personal-shared/README.md` is written as an *empty* skeleton whose
+  `personal-context: pending` marker `--personal-context-asked` flips, recording that the
+  questions were asked rather than what was answered (every fact may stay `—`); and
+  `policy.py check`'s questions are passed through, never re-rendered. Tests:
+  `test_bootstrap.py` (pure functions, then an end-to-end run on a temp clone driven to
+  `ready: yes`) and `test_readme_handoff.py`, which parses the pasted block and fails if
+  anything it names stops existing or an anchor stops matching its heading.
+
 - **Template-shipped pages carry a reserved `mozak-` stem prefix, and a shipped rename replays
   in instances with one command.** The template's pages share one flat namespace with every
   instance's notes (rule 1), so a page the template shipped later could collide with a stem an

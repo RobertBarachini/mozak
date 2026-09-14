@@ -14,7 +14,8 @@
 [![Backlinks](https://img.shields.io/badge/backlinks-derived%2C_never_stored-9f2b68.svg)](AGENTS.md)
 [![Core tooling](https://img.shields.io/badge/core_tooling-stdlib_only-black.svg)](tools/)
 
-[Start an instance](#-start-an-instance) ·
+[Hand it over](#-hand-it-to-your-agent) ·
+[What this is](#what-this-is) ·
 [Orientation](#-orientation) ·
 [One loop, end to end](#-one-loop-end-to-end) ·
 [Why](#-why)
@@ -22,6 +23,58 @@
 </div>
 
 ---
+
+| | |
+|---|---|
+| **What** | A research memory your agent keeps for you: plain Markdown notes you own, linked into a graph, readable by any tool. |
+| **How** | You don't set it up, your agent does. Paste one block into it (next section) and talk to it two minutes later. |
+| **Why** | Notes that outlive every app, an agent that does the upkeep, and a record you can trace claim by claim. |
+
+## 🤝 Hand it to your agent
+
+Copy the block below (the button in its corner) and paste it into any agent that can run
+commands — Claude Code, Codex, Cursor, Gemini CLI or another; the block tells it where the
+rules live.
+
+```text
+Set up a personal knowledge repo for me from the mozak template. Follow these steps
+exactly, in order. Ask me before anything that needs my input, and never invent an
+answer for me.
+
+1. Clone https://github.com/RobertBarachini/mozak.git into a folder named as I say
+   (default: mybrain), then work inside it.
+2. Read AGENTS.md (the rules) and SETUP.md (the procedure). They win over this message.
+3. Run `python3 tools/bootstrap.py`. It checks the setup and prints what is still
+   missing, with the exact command for each item. Do what it says and re-run it until
+   it reports ready.
+4. Whenever it prints questions, ask me each one with its options explained, then
+   record my answer the way it says. That covers the web-acquisition consent and my
+   personal context in .personal-shared/ (how to address me, locale, preferences,
+   whether this machine is mine) — mine to give, never yours to guess, and every
+   answer may be "skip".
+5. Rewrite README.md and pages/start-here.md so they describe MY repo from what I
+   told you, write the first journals/ entry, run `python3 tools/graph.py check`,
+   draft a commit message, and stop. I commit.
+
+Finish by telling me: "Ready. Open <folder> in your agent and ask it to research
+something."
+```
+
+What happens next: it clones into a folder you name, installs nothing, runs the checks, asks
+you a few questions it will never answer for you, and says **Ready**. About two minutes. Then
+talk to it, for example:
+
+- *"Research X — capture your sources, distill what matters into the graph."*
+- *"Ingest this video / article / PDF: `<url>`."*
+- *"Render me a briefing on Y from what the graph knows, and let me annotate it."*
+
+No agent that can run commands yet? Do the first step yourself —
+`git clone https://github.com/RobertBarachini/mozak.git mybrain` — then open the folder in one
+that can, and paste the block. Clone rather than pressing GitHub's *"Use this template"*
+button: it copies files with an unrelated history and no `template` remote, which severs the
+ancestry the [SYNC.md](SYNC.md) pull ritual depends on ([SETUP.md](SETUP.md) §1).
+
+## What this is
 
 *Mozak* ("brain") — a **template for agent-maintained, program-agnostic knowledge
 graphs**. Plain Markdown is the single source of truth; every tool (Claude Code,
@@ -34,26 +87,9 @@ This repo is the **template**: the constitution, schema, note templates, link
 tooling, and the meta-domain pages that document the system. Living **instances**
 (your actual knowledge bases) are born from it and stay connected — pulling system
 updates down and upstreaming generalizable improvements — per the contract in
-[SYNC.md](SYNC.md).
-
-## 🚀 Start an instance
-
-```bash
-git clone https://github.com/RobertBarachini/mozak.git mybrain && cd mybrain
-git remote rename origin template     # the template stays attached as upstream
-python3 tools/graph.py check          # smoke test: 0 broken links, exit 0
-```
-
-Clone rather than GitHub's *"Use this template"* button — the button copies files
-with an unrelated history and no `template` remote, which severs the shared
-ancestry the [SYNC.md](SYNC.md) pull ritual depends on (per [SETUP.md](SETUP.md) §1).
-
-Then follow [SETUP.md](SETUP.md) (viewers, optional MCP, ingestion toolchain) and
-write your instance's first journal entry.
-
-> [!TIP]
-> Or skip the ceremony: point your favourite agent at this repository's URL and
-> ask it to set everything up for you.
+[SYNC.md](SYNC.md). The by-hand path — clone, attach the template as upstream, smoke-test —
+is [SETUP.md](SETUP.md) §1–§3; `python3 tools/bootstrap.py` walks the same steps as a
+checklist.
 
 ## 🧭 Orientation
 
@@ -197,3 +233,7 @@ merely querying it.
 This repository is my current iteration of that attempt: a system for knowledge
 synthesis with a thin ontology and thick epistemics - and a meta-tool meant to
 evolve into ever more integrated systems for human knowledge augmentation.
+
+---
+
+*Read this far? The next step is the same as the first: [hand it to your agent](#-hand-it-to-your-agent).*
