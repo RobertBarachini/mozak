@@ -3,10 +3,12 @@ title: "<Medium>: <original title>"
 type: source
 domain: [<domain>]
 url: <canonical url>
-medium: <video|article|paper|forum|book|podcast|report>
+medium: <video|article|paper|forum|book|podcast|report|dataset|document>
 author: <creator/channel>
 published: <YYYY-MM-DD or remove>
 retrieved: <YYYY-MM-DD>
+archive-url: <wayback/archive.today snapshot URL, or remove>
+capture-method: <rung + tool, e.g. T2 wayback — required at T2+, else remove>
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---

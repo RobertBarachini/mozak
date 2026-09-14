@@ -4,7 +4,7 @@ type: note
 domain: [meta]
 tags: [workflow]
 created: 2026-07-07
-updated: 2026-07-09
+updated: 2026-09-09
 status: growing
 ---
 
@@ -22,7 +22,9 @@ and derived backlinks keep retrieval cheap — the mechanism argued in
    --write-auto-subs`, run locally — cloud IPs get blocked), documents — plus
    whatever is already waiting in `raw/`, the anytime dump zone for unstructured
    files. Tool policy and per-format drain recipes: [[ingestion-toolchain]].
-   Scale breadth/depth and stop by the gates in [[search-gates]].
+   Scale breadth/depth and stop by the gates in [[search-gates]]; get the bytes by the
+   cheapest rung that works, per [[web-acquisition-ladder]], which also sets the separate
+   fetch budget and records which rung produced each capture.
 3. **Capture** — one file per source into `sources/<date>-<slug>.md` (source
    template): provenance frontmatter + cleaned raw content. Immutable afterwards.
    Drained `raw/` items become captures (binaries move to `assets/`, the

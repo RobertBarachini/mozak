@@ -2,7 +2,7 @@
 """Link integrity + derived-backlink index for a plain-text knowledge repo.
 
 Backlinks are never stored in notes; they are DERIVED from forward [[wikilinks]]
-by this script (or plain grep). Conventions: AGENTS.md. Stdlib only.
+by this script (or plain grep). Conventions: AGENTS.md. Core tooling: stdlib only (AGENTS `tools/` row).
 
 Usage:
   python3 tools/graph.py check                # lint links, write _generated/links.json

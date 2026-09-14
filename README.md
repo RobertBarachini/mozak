@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Source of truth](https://img.shields.io/badge/source_of_truth-plain_Markdown-ec4899.svg)](AGENTS.md)
 [![Backlinks](https://img.shields.io/badge/backlinks-derived%2C_never_stored-9f2b68.svg)](AGENTS.md)
-[![Tooling](https://img.shields.io/badge/tooling-stdlib_only-black.svg)](tools/)
+[![Core tooling](https://img.shields.io/badge/core_tooling-stdlib_only-black.svg)](tools/)
 
 [Start an instance](#-start-an-instance) ·
 [Orientation](#-orientation) ·
@@ -61,7 +61,7 @@ write your instance's first journal entry.
 |---|---|
 | 🧑 Humans | [pages/start-here.md](pages/start-here.md) — the root map of content |
 | 🤖 Agents | [AGENTS.md](AGENTS.md) — the constitution (Claude Code loads it via [CLAUDE.md](CLAUDE.md)) |
-| 🔧 Ops | [SETUP.md](SETUP.md) · [SYNC.md](SYNC.md) · [CHANGELOG.md](CHANGELOG.md) |
+| 🔧 Ops | [SETUP.md](SETUP.md) · [SYNC.md](SYNC.md) · [CHANGELOG.md](CHANGELOG.md) · [ROADMAP.md](ROADMAP.md) |
 | 🤔 Why it's shaped this way | the meta pages: design rationale, lineage, research flow |
 
 > Designed 2026-07 from an adversarially-verified deep-research run over the

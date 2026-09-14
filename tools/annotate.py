@@ -8,7 +8,7 @@ Code, another agent, a script) does the work — see pages/report-annotation-loo
 The served page live-refreshes (polls file mtimes), so an agent's drain — flipped
 statuses and appended answers — appears in an open page without a manual reload.
 The tool holds no API key, names no model, and binds 127.0.0.1 only (AGENTS rule 10).
-Conventions: AGENTS.md. Stdlib only.
+Conventions: AGENTS.md. Core tooling: stdlib only (AGENTS `tools/` row).
 
 Usage:
   python3 tools/annotate.py <report.html>              # serve (implicit) + open a browser
@@ -1077,7 +1077,7 @@ def cmd_list(root: Path, html: str, status: str = None) -> int:
 # --------------------------------------------------------------- optional MCP lens
 
 # A minimal JSON-RPC-2.0-over-stdio MCP server in pure stdlib (the official SDK is a
-# third-party dep, disallowed). Read-only: it exposes the queue to any MCP harness
+# third-party dep, and this is core tooling — stdlib only). Read-only: it exposes the queue to any MCP harness
 # (Claude Code, Cursor, Cline…) without the tool ever becoming a dependency — the file
 # stays the source of truth. Register per SETUP.md §5. stdout is the protocol channel;
 # everything human goes to stderr.

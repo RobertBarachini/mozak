@@ -14,6 +14,315 @@ in its own journal.
 
 Newest first.
 
+## 2026-09-09
+
+- **The stdlib-only invariant is rescoped to a zero-install *core*, and recipes gain a
+  declared dependency tier.** The invariant as written was already false — `yt-transcript.py`
+  has shelled out to `yt-dlp` since the founding commit. What has actually held is a stronger
+  and more useful promise: clone the repo, have `git` and `python3`, and the system works with
+  nothing installed. That is now the stated rule, with `graph.py`, `annotate.py`, the hooks,
+  the tests and CI as ring 0 (stdlib, bare `python3`, never importing ring 1), and
+  `tools/recipes/` as the one ring outside it, free to declare external binaries via `# needs:`
+  or Python packages via PEP 723 inline metadata run with `uv run`. Dependencies point inward
+  only. The invariant's normative home is the AGENTS `tools/` row; the *mechanism* — declaration
+  form, runner, venv fallback, and the never-fetch-and-run rule — lives in
+  `tools/recipes/README.md`, because probing for "may I depend on this" and "how do I declare
+  it" are distinct rules that keep one home each (the same split the 2026-08-23 entry made for
+  probing). Rule-9 sweep over all eight live restatements: `SETUP.md`, `CONTRIBUTING.md`,
+  `tools/recipes/README.md`, the AGENTS row, the README badge (`tooling` → `core_tooling`,
+  one word, so it stays true forever), both tool docstrings, and `annotate.py`'s MCP comment,
+  which asserted third-party deps were "disallowed" and would have become a lie. The three
+  CHANGELOG hits were deliberately left alone: a changelog records what was true when written.
+
+- **New page `pages/web-acquisition-ladder.md` — seven rungs, T0 to T6.** The repo had no
+  position on obtaining bytes from a host it does not control: the whole web surface was one
+  roster row deferring to "a full browser fetch" that nothing defined. The ladder runs from
+  "don't fetch — use the official API, dataset, feed or sitemap" through polite HTTP, archives,
+  fingerprint impersonation, a real browser, a logged-in session, and a human-in-the-loop HAR
+  export, escalating only on a recorded failure. **Steps are "rungs" (`T0`–`T6`), never
+  "tiers"** — `search-gates` already owns tier 1/2/3 for stakes, the two scales are independent
+  (a tier-1 question can honestly cost forty requests to one paginated API), and an agent
+  reading "tier 3" must not have to guess which is meant. `search-gates` gains one bullet
+  pointing here for fetch volume; `research-flow` step 2 and `moc-meta` link in.
+  **Jurisdiction-specific analysis is deliberately not shipped** — neither in the page nor in
+  its evidence capture. The author's own EU/national analysis was drafted into the capture and
+  then moved to the gitignored personal zone on the author's rule that the template's tracked
+  surface carries only what holds everywhere; the shipped capture keeps the measured probes,
+  the tooling verdicts, and how the ecosystem treats user-directed agents versus crawlers. The
+  T0 roster's national rows became a generic "your own country" row for the same reason.
+
+- **Measured evidence, not received wisdom, set the rung order.** A full Chrome User-Agent
+  changed nothing against reuters (401) or g2 (403); a complete Chrome header set over HTTP/2
+  still drew 403, because the discriminator is the TLS fingerprint. Stdlib `urllib` with a
+  browser UA retrieved 1.28 MB from nytimes.com. Wayback returned a 59 KB 2026 snapshot of a
+  Reuters page that answers 401 live. And an independent 31-target benchmark separates the best
+  evasion tooling from *unmodified* Playwright by four targets, because IP reputation dominates.
+  So archives and official APIs sit above stealth, and rung T3 is documented as never
+  automatic rather than as the obvious next step.
+
+- **Anonymity by default; contact only with informed consent.** The probes showed the
+  User-Agent is access-neutral — blocks happen at the TLS layer — so it is free to serve a
+  different goal, and the goal is not being tracked: a distinctive tool string is a cross-site
+  correlator, and researchers and journalists may have adversaries. The fetch recipe therefore
+  presents as the most common browser, sends no `From:` header and no locale-revealing
+  `Accept-Language`, and records exactly what it sent. `identity.user_agent = "declared"`
+  exists for people who want to be identifiable; `contact` is never sent by the general fetch
+  in any mode, only by future source-specific recipes that require it (EDGAR mandates one;
+  Crossref's polite pool keys on one), each saying so. A first draft had the opposite default,
+  reading Cloudflare's "Agent" bot category as *honesty buys access*; that category is for
+  registered, signed vendor agents, not a solo local tool, and the draft conflated access with
+  anonymity. The ethical line is the one Perplexity actually crossed in 2025 — not
+  user-direction, not a browser UA, but **rotating IPs to keep going after being told no** —
+  and that is what stays absolute: no evasion after a block, no solvers, no fake accounts.
+  Source-level tests enforce the no-`From:`, no-contact, generic-language invariants.
+
+- **One personal setting decides posture; the template does not decide what is lawful for
+  you.** `tools/recipes/policy.py` merges `.personal-shared/acquisition-policy.toml` over
+  shipped defaults with stdlib `tomllib`. The template ships cautious — rungs T0–T2 — and a
+  single `advanced_acquisition = true` is the user's own determination that more is fine in
+  their context, unlocking every rung as its recipe lands. A
+  first draft shipped ten separate knobs (robots mode, content-signal respect, rung ceiling,
+  session reuse, UA mode, …) and an EU-anchored legal argument for their defaults; both were
+  cut before commit on the author's call that the template is used worldwide, jurisdiction is
+  the user's determination, and a template has no business encoding one country's analysis as
+  everyone's policy. What remains besides the toggle is not law: an optional `contact`
+  (functional — it unlocks Crossref's polite pool and satisfies EDGAR's mandatory contact, at
+  the cost of the user's address in every request header, so it is empty by default), a
+  `budget` (politeness toward hosts, safety for the disk). Unknown keys and wrong types fail loudly; the
+  effective values and a provenance string naming only the knobs that actually deviate are
+  recorded on every fetch. Scope boundary stated in the page: overrides govern acquisition
+  behaviour only and cannot loosen rule 10, the `.private/` never-read rule, or the two-pass
+  toll.
+
+- **Rule 7 gains a consent gate beside `check`: `policy.py check`.** Instances are set up by
+  agents, and an agent must never prefill a human's identity, contact or consent. So the
+  policy file is created only as a commented skeleton, and `policy.py check` — run at session
+  start beside `graph.py check` — exits non-zero, and every fetch recipe refuses, until the
+  human has recorded `[consent].acknowledged`. The skeleton and the shipped defaults are
+  asserted equal by a test so they cannot drift. **A stderr paragraph is exactly the consent
+  that scrolls past**, so — on the author's call — the gate *asks*: while closed, `check`
+  prints the open decisions as questions (posture, identity, contact, then consent), every
+  option explained, each with the `policy.py set key=value` command that records it; `--json`
+  gives the same as data. The agent's duty, now in rule 7, is to put those questions to the
+  human through its harness's structured-question mechanism when it has one and in plain text
+  otherwise, record the answers with `set`, and never pre-answer or infer one. `set` preserves
+  the file's comments, validates by reloading, and restores the previous content on any error;
+  the questions live once, beside the defaults, and a test asserts every key resolves and that
+  consent is asked last. Also removed from
+  the personal-context README: an inferred locale from the egress IP's ASN, recorded in the
+  first draft as `[probed]` — a machine probe was allowed to stand in for a user fact, which is
+  the exact thing the gate exists to prevent. Machine facts stay probed and dated; user facts
+  are left empty for the user.
+
+- **Rung T5 in stdlib: a cookie jar the user exports.** `identity.cookies_file` (default
+  `.personal-shared/cookies.txt`) names a Netscape-format jar — what the cookies.txt browser
+  extensions write and what `yt-dlp` reads. When it exists and `advanced_acquisition` is true,
+  `web-fetch.py` sends each cookie only to its own site through `http.cookiejar` and records the
+  capture as T5; `yt-transcript.py` passes the same file to `yt-dlp`. In cautious mode a present
+  jar is reported and not sent — a user who drops a file without reading is told, not silently
+  deanonymised. Tools read the jar in place, never copy it into `_generated/`, never log a value
+  (a test loads a jar with a known secret and asserts it appears in no status or provenance
+  string), and never write it back. The documented practice is a private-window export of only
+  the sites the work needs, never the daily profile. This is the one deliberate exception to
+  SYNC's "credentials live outside the repo": a credential the user exports *for* this purpose,
+  placed gitignored by their explicit choice — SYNC's placement paragraph now says so.
+
+- **A contact must be reachable, and the file announces where it lives.** Two follow-ups from
+  the author. A fake or no-reply address for `identity.contact` is refused by `set`, and
+  `scholar-lookup` will not send one even if hand-edited in: the field exists so a source can
+  reach you, a fake is the one place the toolchain would fabricate identity, Crossref keys its
+  polite pool on the address so everyone typing the same fake shares one rate-limit bucket, and
+  Unpaywall rejects placeholders anyway. The skeleton comment and the walkthrough question now
+  explain it the same way, in three states — *what it is for* (an operator can e-mail you
+  instead of blocking you), then **empty** (nothing leaves; Unpaywall skipped; Crossref public
+  pool), **a real address** (sent only by the recipes that need one, each saying so; a
+  dedicated alias such as a Proton or forwarding address is the ideal), **a fake** (refused, and
+  why) — so a user deciding elsewhere knows exactly what each choice does. And once consent is recorded,
+  `check` prints the file's absolute path (also on creation, in the closed-state walkthrough,
+  and as `path` in `--json`), marked local-only and gitignored, so the human knows where their
+  answers live. Locale, meanwhile, is confirmed *not* a policy input: it is an optional,
+  skippable row in the personal-context README that nothing parses.
+
+- **New recipe `tools/recipes/web-fetch.py` — rungs T0–T2, stdlib, ~500 lines.** `--probe`
+  reports a host's own declared access paths (robots.txt with its `Content-Signal` and RSL
+  `License:` lines, sitemaps, feed autodiscovery, `llms.txt`, JSON-LD, OpenAPI,
+  `/.well-known/security.txt`) so a session can ask whether to fetch at all; a bare invocation
+  fetches with conditional revalidation, per-host rate limiting, a content-addressed blob store
+  and an append-only JSONL provenance log; `--archive` is the Wayback CDX lookup. Four
+  decisions worth recording. **robots.txt is parsed here rather than by
+  `urllib.robotparser`**, whose reference is the 1996 Koster draft: it lacks longest-match
+  precedence and never sees `Crawl-delay`, `Content-Signal` or `License`. **robots.txt is recorded on every fetch, never a gate for a single read**: RFC 9309 governs
+  crawlers, this recipe fetches one URL and cannot crawl, and a blanket `Disallow: /` read as a
+  gate would forbid research outright — `Crawl-delay` is honoured, the verdict is logged, and
+  the host's own response decides. There is no crawler to treat it otherwise — multi-page work
+  is the agent-curated worklist below, whose pulls are single reads. **A 401/403/418/429 on robots.txt itself is recorded as a block, not as RFC 9309's
+  "4xx ⇒ allow-all"** — that rule assumes no robots file exists (found because Stack Overflow's
+  WAF answers 418). **`Content-Length` is compared against the
+  pre-decompression byte count**, since comparing it to the decoded size flags every gzipped
+  page as truncated. And **a bot wall is never captured as content**: an interstitial, an empty
+  200, or a JS shell is classified, logged, and refused, with the archive rung offered instead.
+
+- **Extraction is a documented approximation, and the raw bytes are kept because of it.** A
+  naive tag-stripper scores *below raw HTML* on extraction benchmarks, so the extractor
+  classifies blocks by link density and stopword ratio — justext's insight, which reaches
+  roughly 0.86 F1 against trafilatura's 0.924 — and warns when it kept too little. Keeping the
+  gzipped original content-addressed makes re-extraction with a better tool free later, which
+  is claim-level provenance applied to ingestion.
+
+- **`_generated/fetch/` is the store, and no recipe may write into the graph.** Machine fetches
+  are derived, disposable and carry no drain obligation: a cache changes dereference latency,
+  not admission, which is `store-the-delta`'s own sentence. Routing them through `raw/` instead
+  would have manufactured a growing backlog whose only relief is authoring captures — pressure
+  toward exactly the hoarding the two-pass toll exists to prevent. The structural gate is a new
+  general rule in `tools/recipes/README.md`: **no recipe writes to `pages/`, `sources/`,
+  `journals/` or `archive/`**, and there is no `--capture` flag on any fetch tool, ever. Five
+  hundred cache entries produce zero graph files because nothing can convert them. A test
+  enforces it by grepping every recipe.
+
+- **Schema: `medium` gains `dataset`; `archive-url` and `capture-method` added.** `dataset`
+  closes a *pre-existing* hole — the ingestion page already documented a JSON/CSV drain path
+  with no valid `medium` value for its output. **`webpage` was refused deliberately**, with the
+  reason written into the row: the field names what an artifact *is*, not the pipe it arrived
+  through, and `article` vs `webpage` would be an unresolvable coin-flip on every web capture.
+  `archive-url` is a URL and named so — among four `YYYY-MM-DD` neighbours an `-at` suffix would
+  collect a date — and it is the mechanical enabler of surgical repair after a source 404s.
+  `capture-method` is required at rung T2 and above, because from there up the bytes are a
+  mirror, a fingerprinted client, a rendered DOM or a logged-in session, and a bot-blocked stub
+  reads exactly like a thin page once the session ends. A content hash was **deferred**: nothing
+  consumes it, and the capture already stores the content verbatim.
+
+- **web-fetch's pipeline is one function, `perform()`, and pages surface their links.** The
+  fetch → robots → pace → conditional GET → classify → store → log sequence was factored out of
+  the CLI so that every other recipe performing a targeted pull calls the same code; `run()` is
+  now only printing and exit codes, and `explain_failure()` names the next rung from the one
+  that failed. The HTML parser collects every `<a href>` with its anchor text and whether it sat
+  in nav/footer chrome, and `--links` prints them resolved, deduplicated and labelled (pdf, doi,
+  arxiv, feed, page; same-site or external) so an agent can *choose* which references deserve
+  a pull. Nothing follows them.
+
+- **Multi-page work is an agent-curated worklist, not a crawler: `web-worklist.py`.** The plan
+  had sketched a resumable SQLite frontier; the author's design replaced it, and it is the
+  better one: "pull a page, let the agent decide which links are worthwhile, then those are
+  targeted pulls again." `add <url> --why "…"` refuses an entry without a reason — the list
+  records judgement, not traffic; `show` lists reasons and results; `run` prints its plan
+  (count, hosts, every reason) and does nothing without `--yes`, the documented protocol being
+  that the agent shows the user that plan first. Limits are structural: capped at
+  `budget.max_fetches_per_run`, a host that answers 403/429 or a challenge is skipped for the
+  rest of the run, progress is saved after every pull, and each provenance row carries `why`,
+  the parent URL and the run id, so the log reads as reasoning. Verified live: ok / blocked /
+  skipped across two hosts, exactly as designed. robots.txt is recorded, not gated, for these
+  pulls as for single reads — the author's call that approved multi-page work behaves the same
+  — and the ladder page no longer promises a crawler that would treat it otherwise, because
+  there is none.
+
+- **Rung T6 in stdlib: `web-har-harvest.py`.** You browse and export a HAR into `raw/`; the
+  recipe lifts the document responses into the same store and log as every other rung, stamped
+  T6. Credentials are discarded by construction: six response headers are allowlisted and
+  nothing else survives — no request headers, no cookies, no browser fingerprint, never a copy
+  of the HAR — and a test harvests a fixture carrying `Cookie`, `Set-Cookie`, `Authorization`
+  and a unique UA, then greps the entire store for each. It needs consent but not
+  `advanced_acquisition`: the agent touches no network; the human did the fetching, which makes
+  this the *most* conservative rung, not the least.
+
+- **Rung T0 for papers: `scholar-lookup.py`.** A DOI, arXiv id or title → Crossref, OpenAlex
+  and arXiv (all keyless, all verified live) → capture-ready frontmatter with
+  `capture-method: T0 scholar-lookup` plus the best open-access copy — never the publisher's
+  page. Unpaywall, the most precise OA verdict, *requires* an e-mail, so it is queried only
+  when `identity.contact` is set and the output says whether it was; Crossref's polite pool
+  uses that contact the same way. Every registry call goes through `perform()`'s `fetch()` and
+  is logged as T0. Verified: a 2015 Nature DOI resolved to its HAL green copy and 84 k
+  citations; an arXiv id to its PDF.
+
+- **Rung T3: `web-impersonate.py`, the first PEP 723 recipe.** `curl_cffi` replays a real
+  browser's TLS handshake and sets the matching UA itself — the one place the UA is not the
+  policy string, and the row says so. Behind `advanced_acquisition`, never automatic, with the
+  entitlement reminder printed on every run. Verified against the target that motivated the
+  whole ladder: the handshake gets past g2.com's TLS layer, meets a JavaScript challenge, and
+  the classifier refuses to call it content — offering the Wayback snapshot instead. Honest
+  result: T3 alone does not beat a JS wall; the message now says T4 would.
+
+- **Rung T4/T5: `web-render.py`, a browser that belongs to the repo.** The author's constraint
+  — repo-sandboxed, separate from the user's browser, nuked across sessions, keep only
+  what is needed — enforced in code: Playwright's own Chromium in a `tempfile.mkdtemp()`
+  profile destroyed in a `finally`; seeded from `cookies.txt` and nothing else, only cookies
+  for the target's domain; third-party XHR, beacons, images, media and iframes aborted (scripts,
+  styles, fonts allowed so pages render); no `storage_state` ever written; optional screenshot
+  and HAR under `_generated/fetch/render/`, the HAR stripped of `Cookie`/`Set-Cookie`/
+  `Authorization` before writing. The UA keeps the browser's real version and platform
+  with one edit: even the full Chromium build announces `HeadlessChrome` in headless mode —
+  found by reading the render's own HAR, after a first draft had assumed `--no-shell` would
+  avoid it — and that marker is a cross-site correlator, so it is replaced by `Chrome`. The author
+  then pointed at the other label of the same kind — the old chromedriver `$cdc_` / webdriver
+  tell — and its modern form is Playwright's default `--enable-automation`, which sets
+  `navigator.webdriver = true`; that flag is dropped and `AutomationControlled` disabled, so
+  the value the page sees is `false`. That is where it stops: no fingerprint injection, no CDP
+  patching, no canvas/WebGL/plugin spoofing — a test pins the boundary — because the benchmark
+  put that entire tier at four targets in thirty-one, and presenting as *this* browser is the
+  point. The row records both edits, the build used, and the `navigator.webdriver` value. `uv` was installed user-level for this (rc files untouched), and Chromium
+  landed under `~/.cache/ms-playwright` with no sudo. Verified on a real news page: 27
+  third-party requests blocked, 11 k characters and 250 links extracted, a 103-entry HAR with
+  2,471 headers kept and **zero** credential headers or cookies remaining, and no profile left
+  on disk.
+
+- **New root doc `ROADMAP.md`: considered and deferred, with re-open gates.** The session
+  produced a dozen decisions of the form "weighed, not built, here is what would change that"
+  — a PDF tier, a crawl frontier, Save Page Now, a feed store, `protego`, a content hash — and
+  they lived only in a harness-specific plan file, which nothing in the repo may depend on.
+  Now they live beside the changelog as its forward-looking sibling: CHANGELOG records what
+  landed, ROADMAP records what was deliberately not built and the gate that re-opens it. It
+  also carries a *rejected — not to be re-proposed* list (solvers, fingerprint injection, a
+  persistent browser profile, `webpage`, `--force`, contact-in-every-request), so the next
+  session does not re-litigate them. Template-owned; its header holds the entry/exit rule
+  (one home, rule 9); AGENTS's root-docs row and SYNC's ownership cell name it; CONTRIBUTING
+  points at it. Prompted by dropping `security.allow_mitm_capture`: a policy knob nothing read
+  — the mitmproxy path it reserved had been rejected in favour of HAR export — is exactly the
+  kind of reserved slot that rots, so the knob went and the path became the roadmap's first row.
+
+- **First tests in the repo, and a CI step to run them.** `tools/tests/test_recipes.py`, stdlib
+  `unittest`, inline fixtures, 66 tests, **no network** (the T6 and worklist tests run the real recipes on fixtures in a temp root) — network tests would be flaky and would
+  hammer third parties from CI, violating the politeness rule the fetch layer exists to encode.
+  The highest-value test is derived by glob rather than enumerated, so it cannot rot: every
+  recipe's five contract lines exist, contiguous and ordered; any PEP 723 block parses as TOML
+  and sits outside the `-A4` window; the uv shebang appears iff a block does; `--help` exits 0.
+  It also covers the robots precedence rules, the classifier's failure modes, the policy loader,
+  and — deliberately — `graph.py`'s `parse_ownership`, the repo's most fragile code, twice
+  bug-fixed and until now at zero coverage; that test earns its keep even if the web layer were
+  reverted. CI gains one step, not a job, and **installs nothing**: running on a bare checkout
+  is what proves the core is zero-install. `tools/tests/` sits under `tools/` rather than at the
+  root precisely so the SYNC Ownership table needs no amendment.
+
+- **SYNC gains a third placement class: outside the repo.** A gitignored path is still *inside*
+  the tree — a backup copies it, a `grep -r` walks it, one `.gitignore` edit tracks it — so live
+  credentials and authenticated browser profiles live in the environment, the OS keyring or an
+  XDG state dir, with `.personal-shared/` holding only the pointer. Tools that resolve such a
+  path refuse one inside the repo root. Recorded in the *Gitignored ⇒ instance-local* section,
+  which already owns "where a thing lives relative to git"; the Ownership table itself is
+  unchanged, since `tools/` already globs every new path this release adds. One deliberate exception is
+  carved out for a research cookie jar the user exports for this purpose — see the T5 bullet.
+
+- **`tools/recipes/local/` now exists.** It was specified in three places and present in none,
+  so the first agent to need it would have had to invent whether it was tracked. A bare
+  `.gitkeep`, following the `.private/` and `.personal-shared/` precedent — deliberately not a
+  README, which at that path would fall inside the Ownership exclusion and become
+  un-updatable by the template.
+
+- **Rule of two amended: derivations inside a session count.** Fetching a page is the most
+  repeated acquisition act in this repo's history, yet the counter never tripped, because those
+  hand-rolls happened inside agent tool calls where a grep of `tools/` cannot see them. That is
+  a gap in the rule rather than a loophole, and it is now stated. The clause also says plainly
+  that documenting a technique in a page is not writing a recipe — which is why the ladder
+  describes all seven rungs while only one recipe ships.
+
+- **`yt-transcript` prefers `json3`, and the AGENTS grep advert got scoped.** YouTube's native
+  timed-text JSON carries no rolling duplicates, so the recipe's original purpose — collapsing
+  repeated VTT cues — becomes its fallback path; a missing JavaScript runtime, now required for
+  full YouTube support, warns loudly instead of silently degrading. Separately, AGENTS line 10
+  advertised an unscoped `grep -rF '[[stem'`, which a fetch cache would pollute; it is now
+  scoped to `pages/ journals/ sources/`, matching `graph.py`'s own `NOTE_DIRS` and more correct
+  regardless. `yt-transcript`'s URL mode is now gated on `[consent].acknowledged` like every
+  fetch recipe, and hands `.personal-shared/cookies.txt` to `yt-dlp` when present under
+  `advanced_acquisition`; `--sub` mode is offline and ungated.
+
 ## 2026-08-23
 
 - **`.personal-shared/` is the authority for environment facts, and outranks probing.** Its

@@ -4,7 +4,7 @@ type: note
 domain: [meta]
 tags: [workflow]
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-09-09
 status: growing
 ---
 
@@ -32,6 +32,13 @@ a **recorded decision**, not exhaustion.
 - **Adversarial minimum** — before any claim is promoted toward `evergreen`, at
   least one deliberate disconfirmation search ("X is wrong / criticism /
   debunked"). Cheap, and it is what catches echo chambers.
+- **Effort is not traffic.** These gates size the *evidence* a question needs. How many
+  pages you may *fetch* to get it — page count, depth, domain scope, request rate — is a
+  separate budget with a separate owner: the host you are fetching from. It lives in
+  [[web-acquisition-ladder]], whose steps are **rungs** (`T0`–`T6`), not tiers — the tiers
+  on this page are stakes, and the two scales are independent. A tier-1 question can
+  honestly cost forty requests against one paginated API; a tier-3 one can be answered by
+  three primary PDFs. Set both budgets at kickoff and record both stops.
 
 ## Stop signals (any one fires → stop)
 
@@ -43,7 +50,8 @@ a **recorded decision**, not exhaustion.
    answerable at the confidence its tier needs. Search serves questions, not
    completeness.
 4. **Budget** — the tier's cap, set at kickoff, is reached; escalating the tier
-   mid-search is allowed but must be journaled as a decision.
+   mid-search is allowed but must be journaled as a decision. (The fetch
+   budget is separate and stops independently — [[web-acquisition-ladder]].)
 
 ## Record the stop
 

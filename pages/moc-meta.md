@@ -3,7 +3,7 @@ title: Meta — map of content
 type: moc
 domain: [meta]
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-09-09
 ---
 
 # Meta — map of content
@@ -38,3 +38,6 @@ reasoning behind them.
   struck-through losers, titles never assert falsehoods).
 - [[search-gates]] — stakes-tiered breadth/depth, source independence, and the
   recorded stop signals.
+- [[web-acquisition-ladder]] — how to *get* the bytes search-gates decides you need:
+  seven rungs from official API to human-in-the-loop, the honesty-as-access-strategy
+  argument, and the user's own-context posture toggle with its consent walkthrough.

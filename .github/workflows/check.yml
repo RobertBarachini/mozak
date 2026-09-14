@@ -1,7 +1,12 @@
-# Link-integrity gate: the graph must have no broken wikilinks and no duplicate
-# stems on every push/PR. Same command as the local definition of done (AGENTS.md
-# rule 7). Instances inherit this via the template merge and get the same gate on
-# their own remotes.
+# Link-integrity gate plus the stdlib unit tests: the graph must have no broken
+# wikilinks and no duplicate stems, and tools/ must behave, on every push/PR. Same
+# commands as the local definition of done (AGENTS.md rule 7). Instances inherit
+# this via the template merge and get the same gate on their own remotes.
+#
+# Deliberately NO install step and no uv: running on a bare checkout with nothing
+# installed is what proves the core is zero-install (AGENTS `tools/` row). Recipes
+# that declare PEP 723 dependencies are covered by the static conformance test
+# instead of by being executed here.
 name: check
 on: [push, pull_request]
 jobs:
@@ -10,3 +15,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 tools/graph.py check
+      - run: python3 -m unittest discover -s tools/tests -v

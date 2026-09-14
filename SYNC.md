@@ -10,15 +10,30 @@ Agents never push in either repo; humans review drafted commits and push.
 
 | Class | Paths | Merge-conflict resolution |
 |---|---|---|
-| **Template-owned** | `tools/` (except `tools/recipes/local/` — instance-owned, never shipped, never auto-upstreamed), `templates/`, `CLAUDE.md`, `.claude/skills/` (agent-harness lenses the template ships; per-machine Claude state stays gitignored and local), `.gitignore`, `.github/`, `LICENSE`, `CHANGELOG.md`, and the **meta pages** — every pages/*.md the template ships (the template's own pages listing IS the roster, per AGENTS rule 9 no copy is maintained here; the ownership guard resolves it dynamically from the template remote) except (`pages/start-here.md` — the birth seed, instance-owned below) | Take template's side. Instances don't edit these; a needed change is made in the template (or upstreamed first). Instances annotate a meta page by **linking to it from their own notes** — backlinks are derived, so the connection surfaces without editing the shared body. |
+| **Template-owned** | `tools/` (except `tools/recipes/local/` — instance-owned, never shipped, never auto-upstreamed), `templates/`, `CLAUDE.md`, `.claude/skills/` (agent-harness lenses the template ships; per-machine Claude state stays gitignored and local), `.gitignore`, `.github/`, `LICENSE`, `CHANGELOG.md`, `ROADMAP.md`, and the **meta pages** — every pages/*.md the template ships (the template's own pages listing IS the roster, per AGENTS rule 9 no copy is maintained here; the ownership guard resolves it dynamically from the template remote) except (`pages/start-here.md` — the birth seed, instance-owned below) | Take template's side. Instances don't edit these; a needed change is made in the template (or upstreamed first). Instances annotate a meta page by **linking to it from their own notes** — backlinks are derived, so the connection surfaces without editing the shared body. |
 | **Shared-evolving** | `AGENTS.md`, `SYNC.md`, `conventions/frontmatter-schema.md`, `SETUP.md` (body) | Merge by intent: system-generic content follows the template; instance-specific lines stay. Any generalizable improvement made instance-side MUST be upstreamed (see ritual below) — otherwise the repos drift apart permanently. |
-| **Instance-owned** | All other `pages/` — including `pages/start-here.md`, the instance's front door and domain index: a template-authored **birth seed**, shipped at instantiation and never updated by the template afterwards — `journals/`, `sources/` (except its README and the template-shipped founding-research capture — the public evidence core behind the design's claims), `raw/`, `assets/`, `.private/`, and `.personal-shared/` contents (all gitignored; the template ships only their READMEs / `.gitkeep` markers), `archive/` content (except its README), `README.md` | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
+| **Instance-owned** | All other `pages/` — including `pages/start-here.md`, the instance's front door and domain index: a template-authored **birth seed**, shipped at instantiation and never updated by the template afterwards — `journals/`, `sources/` (except its README and the template-shipped research captures tagged `founding` — the public evidence core behind the design's claims), `raw/`, `assets/`, `.private/`, and `.personal-shared/` contents (all gitignored; the template ships only their READMEs / `.gitkeep` markers), `archive/` content (except its README), `README.md` | Keep instance's side. The template never ships content here. (`_generated/` is gitignored on both sides — derived, never merged.) |
 
 **Enforced by** `python3 tools/graph.py ownership`: advisory in the rule-7 `check`
 bracket, opt-in pre-commit hard gate (SETUP). An *instance* is any repo with a
 `template` remote; the guard is a no-op in the template itself. A file whose working
 content is byte-identical to the template's is never flagged (it is a sync receipt,
 not local authorship — so a pull-in-progress stays clean even with the hook on).
+
+**Some things belong in neither tree.** A gitignored path is still *inside* the repo: a
+backup copies it, a `grep -r` walks it, and one `.gitignore` edit tracks it. Secrets
+that were not made for this repo — API keys, proxy passwords, a daily browser's profile —
+therefore live **outside the repo entirely**, in the environment, the OS keyring, or an XDG
+state dir; `.personal-shared/` holds the *pointer* (path, port, variable name), never the
+secret, and a tool that needs one resolves it from the environment and refuses a path
+inside the repo root. **One deliberate exception:** a credential the user exports *for*
+this research — `.personal-shared/cookies.txt`, a Netscape cookie jar from a private window
+logged into only the sites the work needs. Placing it there is the user's explicit choice,
+gitignored, knowing the guarantee is negative; tools read it in place, never copy it into
+`_generated/`, never log a value. Three placements, then: **tracked** (shared, upstreamable),
+**gitignored** (instance-local, user-visible — including a research cookie jar the user chose
+to keep here), **outside** (everything credential-bearing that was not exported for this
+purpose).
 
 **Stem collisions.** All wikilink stems share one namespace, so a template release can
 ship a new meta page whose stem an instance already used. After `git fetch template`

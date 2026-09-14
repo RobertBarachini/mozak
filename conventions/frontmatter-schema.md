@@ -29,10 +29,16 @@ live in bodies.
 | Field | Req | Value |
 |---|---|---|
 | `url` | yes* | Canonical URL. *Omit when the capture has no public address: internal agent-generated research (e.g. a deep-research run) or a `medium: document` private primary document — provenance then lives in the body (run id, script, artifact paths; or issuer, date, `archive/` path). |
-| `medium` | yes | `video` \| `article` \| `paper` \| `forum` \| `book` \| `podcast` \| `report` (agent-generated research reports / internal runs) \| `document` (a primary document the graph reasons *from* — contract, letter, invoice, official decision; the note fronts it, the verbatim text lives in `archive/`, or in `.personal-shared/` when the document is too personal to track) |
+| `medium` | yes | `video` \| `article` \| `paper` \| `forum` \| `book` \| `podcast` \| `report` (agent-generated research reports / internal runs) \| `dataset` (structured data captured *as data* — a CSV/JSON extract, an API response, a bulk-download slice; the capture holds the query and the slice actually used, never the whole dump) \| `document` (a primary document the graph reasons *from* — contract, letter, invoice, official decision; the note fronts it, the verbatim text lives in `archive/`, or in `.personal-shared/` when the document is too personal to track) |
 | `author` | no | Creator/channel |
 | `published` | no | `YYYY-MM-DD` if known |
 | `retrieved` | yes | `YYYY-MM-DD` the capture was made |
+| `archive-url` | no | Snapshot URL at a public archive (Wayback, archive.today) for a `url` that can rot. `url` is where it lived; `archive-url` is where it still lives. Record one whenever a snapshot is taken or found — it is what keeps the surgical repair of [claim-level provenance](../pages/claim-level-provenance.md) possible after the original 404s. A URL, never a date (that is `retrieved`). |
+| `capture-method` | no* | How the bytes were obtained: a rung token from the acquisition ladder plus the tool — `T1 urllib`, `T2 wayback`, `T4 playwright`, `T6 har`. *Required at rung `T2` and above, omitted below: from T2 up the bytes are a mirror, a fingerprinted client, a rendered DOM or a logged-in session, and a bot-blocked stub or an empty JS shell reads exactly like a thin page once the session ends. Makes "which captures need re-verification" a one-grep sweep. Rungs: [web acquisition ladder](../pages/web-acquisition-ladder.md). |
+
+**No `webpage` value in `medium`, deliberately:** the field names what the artifact *is*,
+not the pipe it arrived through — a fetched news page is an `article`, a fetched statute a
+`document`, a fetched JSON endpoint a `dataset`.
 
 ## Examples
 
