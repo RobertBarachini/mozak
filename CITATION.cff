@@ -6,8 +6,8 @@ authors:
   - family-names: "Barachini"
     given-names: "Robert"
 license: MIT
-version: 1.0.0
-date-released: "2026-08-06"
+version: 1.1.0
+date-released: "2026-09-15"
 repository-code: "https://github.com/RobertBarachini/mozak"
 abstract: >-
   A template for agent-maintained knowledge graphs where plain Markdown is the

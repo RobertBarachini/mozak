@@ -86,6 +86,7 @@ upstreaming: strip names, dates-of-use, domain content, founding-capture wikilin
 ```bash
 git status                           # start clean — a dirty tree makes the merge uninspectable
 git fetch template
+git describe --tags template/main    # which template release is incoming (tags travel with the fetch)
 git log --stat main..template/main   # INSPECT what is incoming, commit by commit
 git diff main...template/main        # ...and the full content delta since the merge-base
 # classify every incoming change against the Ownership table BEFORE merging

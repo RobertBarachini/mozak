@@ -16,6 +16,11 @@ Newest first.
 
 ## 2026-09-15
 
+*Released as `v1.1.0`. Pulling from v1.0.0 needs one action after the merge, which a minor
+version does not announce on its own: `python3 tools/graph.py migrate` — ten shipped pages were
+renamed under the reserved `mozak-` prefix (2026-09-14 below) — then `check`. At the next session
+start `python3 tools/recipes/policy.py check` asks the four acquisition questions once.*
+
 - **README gains *What people ask it* — thirteen openers from a live instance's first ten
   weeks.** The handoff block fixed "how do I start"; this answers "what do I even do with it",
   with evidence rather than a feature list: one instance, eight domains, 217 notes, 58
