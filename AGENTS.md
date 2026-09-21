@@ -34,7 +34,7 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
 | `tools/` | `graph.py` — check / backlinks / rename / migrate / tags / domains / ownership. `migrations/` — the append-only ledger of shipped stem renames that `migrate` replays (rule 6). `bootstrap.py` — instance birth as a checklist (SETUP §1–§3): template remote, both gates, the empty personal-context skeleton and whether its questions were asked, an instance README, a journal of its own; prints ✓/✗ with the exact next command, exits 0 only when ready, asks nothing and prefills nothing itself. `annotate.py` — serve a render locally with a live-refreshing annotation overlay + capture per-passage re-prompts to `annotations.md` ([pages/mozak-report-annotation-loop.md](pages/mozak-report-annotation-loop.md)). `recipes/` — executable typed transformations with contract headers (catalog: `grep -rA4 "^# recipe:" tools/recipes/`); check there before hand-rolling, promote on second hand-roll (rule of two). **Zero-install core:** `graph.py`, `annotate.py`, `bootstrap.py`, the hooks, the tests and CI import Python **stdlib only** and run under a bare `python3` — a fresh clone works with nothing installed, and that must stay true. Recipes are the one ring outside that line: they may declare dependencies (external binaries, or Python packages via inline script metadata), are opt-in and standalone, and are never imported or invoked by the core — declaration mechanism, runner and fallback in [tools/recipes/README.md](tools/recipes/README.md). |
 | `_generated/` | Derived artifacts — **all gitignored**, nothing here is source-of-truth. `links.json`: the mechanical index, never hand-edit; `check` rebuilds it before and after edits (rule 7), pulls (SYNC ritual), and clones (SETUP smoke test). `presentations/<yyyy-mm-dd>-<slug>/`: agent-rendered outputs synthesized FROM the graph (reports, HTML, PDF) — disposable renderings; any new insight they contain is distilled back into `pages/` first (a render is never an insight's only home) and every render leaves a journal line naming its source notes. |
 | `.private/` | Local-only **private zone** — the user's own notes and files. **Hard rule: the agent never reads, opens, or greps anything here unless the user explicitly approves access for that request** (it holds material the user chose to withhold from the agent). Only an empty `.gitkeep` is tracked (so the zone exists in a fresh clone); every real file is gitignored — never tracked, never in history — and nothing readable ever ships, keeping the never-read rule absolute. |
-| `.personal-shared/` | Local-only **personal context** — personal facts (name, measurements, preferences, locale) that make answers concrete, and the **personal documents** the graph reasons from but git must not hold (a contract, a letter, a statement: `archive/` is tracked, so those land here instead, fronted by a thin `sources/` capture that carries the analysis, not the specifics). **Both the user and the agent may view AND edit it**, and the agent reads/uses it freely; it maintains a top-level index of what's stored in `.personal-shared/README.md`, generating that README if absent. **Environment truth lives here and outranks probing:** the shell an agent runs in may not be the user's machine (VM, container, remote host), so `lsb_release`, package and hardware queries describe *that shell* only — read this zone before any environment-dependent claim or recommendation and treat it as authoritative, report a probe as a probe of wherever the session runs, and when the fact is missing here, ask rather than infer it from the shell. But it is **never committed**: only an empty `.gitkeep` is tracked; the README and all content stay local. The complement to `.private/`: shared with the agent, withheld from git. |
+| `.personal-shared/` | Local-only **personal context** (what tracked files may say about it: rule 11) — personal facts (name, measurements, preferences, locale) that make answers concrete, and the **personal documents** the graph reasons from but git must not hold (a contract, a letter, a statement: `archive/` is tracked, so those land here instead, fronted by a thin `sources/` capture that carries the analysis, not the specifics). **Both the user and the agent may view AND edit it**, and the agent reads/uses it freely; it maintains a top-level index of what's stored in `.personal-shared/README.md`, generating that README if absent. **Environment truth lives here and outranks probing:** the shell an agent runs in may not be the user's machine (VM, container, remote host), so `lsb_release`, package and hardware queries describe *that shell* only — read this zone before any environment-dependent claim or recommendation and treat it as authoritative, report a probe as a probe of wherever the session runs, and when the fact is missing here, ask rather than infer it from the shell. But it is **never committed**: only an empty `.gitkeep` is tracked; the README and all content stay local. The complement to `.private/`: shared with the agent, withheld from git. |
 
 ## Authoring rules (MUST)
 
@@ -94,9 +94,29 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    episodes, content sweeps, syncs performed) → a `journals/` entry; **changes to the
    template system itself** (these MUST rules, the schema, `tools/`, `templates/`, root
    config such as `.gitignore`) → a [CHANGELOG.md](CHANGELOG.md) entry, which is
-   template-owned (the template authors it; instances only read it). Then draft a
+   template-owned (the template authors it; instances only read it).
+   **Then re-read this file — before drafting the commit, and before writing any
+   handoff.** `check` is mechanical: it proves links resolve and stems are unique, and it
+   is silent on every rule here. A long session is exactly where that gap opens. The
+   constitution is loaded once at the start and then competes with a session's worth of
+   working context, so by the close the rules are being *recalled* rather than *read* —
+   and a rule recalled is a rule paraphrased. Re-read the MUST rules against what the
+   session actually did, not against what it set out to do, and repair what drifted before
+   handing anything over. A handoff earns the same treatment for a sharper reason:
+   whoever picks the work up inherits the drift, and a handoff written from a paraphrased
+   reading propagates it past the point where its author could still catch it. Then draft a
    commit message and stop — the human commits (unless they've explicitly opted this
    repo into autonomous commits).
+   **Re-read the drafted message against the staged diff before handing it over — every
+   time, no exceptions.** The message is the one artifact written from *session context*
+   rather than from the tree, and it is written last, so it is where the specifics a file
+   deliberately withheld come back: a figure that belongs in `.personal-shared/` (rule 11),
+   a secret, a third party's details, a path outside the repo. A clean tree proves nothing
+   about the message. Verify each claim the message makes against what is actually staged
+   — a message that asserts what a commit contains, or does not contain, must be checked
+   rather than remembered — and treat a message naming something absent from the diff as
+   the error, not as extra context. This is cheap before the commit and costs a history
+   rewrite after it.
    In an instance (a repo with a `template` remote) never author a template-owned file
    (SYNC Ownership table); a generalizable improvement is routed upstream, not edited
    locally — per SYNC's *Instance upstreams an improvement* ritual. `python3
@@ -131,6 +151,22 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    the user's explicit per-request authorization — publishing exfiltrates private
    knowledge and can be cached or indexed beyond deletion. Rendering is local by default;
    sharing is a separate, authorized act.
+11. **Personal figures stay in `.personal-shared/`; tracked files point at them.** That
+   zone's layout row says what it *holds*; this rule says what every tracked file may
+   *say about it*. Git is append-only and syncs outward, so a figure committed once is
+   committed for good — which is why the boundary is drawn at what gets written, not at
+   what gets cleaned up later. A tracked file therefore carries the **structure** — the
+   decision, the conclusion, the reasoning that outlives the number — and **points** to
+   the value ("scores and per-item values in `.personal-shared/<file>`"), never restates
+   it. This binds every tracked surface equally: `pages/`, `sources/` captures,
+   `journals/`, **and commit messages** — a message is history the moment it lands, so
+   scrubbing the file afterwards leaves the log untouched and costs a rewrite to undo.
+   Covered: measurements, test and screening scores, lab values, sums, income, holdings,
+   addresses, account and case identifiers, dates of personal events. **Not** covered:
+   the generalizable finding derived from them, which is the whole reason the graph
+   exists — *"the differential narrowed to one branch"* belongs in a note; the score that
+   narrowed it does not. The counterpart of rule 10 seen from inside: rule 10 governs
+   what may leave the repo, this governs what the repo may record at all.
 
 ## Ingestion workflow (two-pass — never skip the raw layer)
 

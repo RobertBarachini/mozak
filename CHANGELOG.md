@@ -14,6 +14,54 @@ in its own journal.
 
 Newest first.
 
+## 2026-09-21
+
+- **New MUST rule 11 — personal figures stay in `.personal-shared/`; tracked files point at
+  them.** The zone's layout row already said what it *holds*; nothing said what a tracked file
+  may *say about it*, and the gap is not theoretical: it was found by an instance agent that
+  wrote a user's per-item screening scores into a tracked capture and journal, then asserted in
+  the commit message that the scores were not in the commit. The user caught it, not the
+  agent's own checks. Both halves of that failure are now named by the rule — the surfaces it
+  binds are `pages/`, `sources/`, `journals/` **and commit messages**, because a message is
+  history the moment it lands and scrubbing the file afterwards leaves the log untouched. The
+  rule draws the line at what gets *written* rather than what gets cleaned up, since git is
+  append-only and syncs outward. It also states the thing that keeps it from over-firing: the
+  generalizable finding derived from a figure is exactly what the graph is for, so *"the
+  differential narrowed to one branch"* belongs in a note while the score that narrowed it does
+  not. Placed at 11, immediately after 10, because the two are one boundary seen from opposite
+  sides — 10 governs what may leave the repo, 11 what the repo may record at all.
+- **Rule 7's close now re-reads this constitution — before the commit draft and before any
+  handoff.** Proposed by an instance user watching the same session drift, and the diagnosis is
+  attention rather than ignorance: the rules are loaded once at session start, then compete with
+  a session's worth of working context, so by the close they are being *recalled* rather than
+  *read* — and a rule recalled is a rule paraphrased. `check` does not cover the gap; it is
+  mechanical and silent on every MUST rule. The wording makes the test "what the session actually
+  did, not what it set out to do", because the drifted reading and the intent usually still agree.
+  Handoffs are named explicitly for the sharper reason: whoever picks the work up inherits the
+  drift, past the point where its author could still catch it. This is the third rule today from
+  one failure, and the most general — rule 11 names the substance, the commit-message re-read
+  names the surface that leaks, and this names why an agent that had read both could still miss
+  them.
+- **Rule 7 gains a mandatory commit-message re-read**, and it is the more general half of the
+  same lesson. The originating failure had *clean files and a leaking message* — the message
+  even asserted the scores were absent from the commit while they were in it. The reason
+  generalises past personal data: the message is the one artifact written from **session
+  context** rather than from the tree, and it is written **last**, so it is exactly where the
+  specifics a file deliberately withheld come back — a figure, a secret, a third party, a path
+  outside the repo. Hence the operative instruction is to verify the message **against the
+  staged diff**, not against memory of the session, and to treat a message naming something
+  absent from the diff as the error rather than as helpful extra context. Placed in rule 7
+  because it is a definition-of-done step; it points at rule 11 for the substance rather than
+  restating it (rule 9).
+- **Considered and rejected: folding this into rule 5's admission test.** That was the first
+  instinct, since clause (a) already has the pointer-not-copy shape and AGENTS rule 9 prefers
+  extending an existing home to opening a new one. It fails on scope: the admission test gates
+  *notes*, and the originating failure was in a capture, a journal and a commit message — none
+  of which rule 5 reaches. A sub-clause would also have buried a privacy boundary inside a
+  note-quality checklist.
+- **`.personal-shared/` layout row gains a pointer to rule 11** (AGENTS rule 9 — dependents
+  point at the authority, never restate it).
+
 ## 2026-09-15
 
 *Released as `v1.1.0`. Pulling from v1.0.0 needs one action after the merge, which a minor
