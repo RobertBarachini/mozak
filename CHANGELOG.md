@@ -14,6 +14,32 @@ in its own journal.
 
 Newest first.
 
+## 2026-11-05
+
+- **The ladder now names its default client: the harness's built-in fetch first, the recipes
+  as the escalation.** [pages/mozak-web-acquisition-ladder.md](pages/mozak-web-acquisition-ladder.md)
+  said *which rung* to try and in what order, but not *which client* tries it, so the order
+  between an agent's built-in page reader and `web-fetch.py` was left to habit. An instance
+  session showed how that goes wrong. Its built-in fetch was refused by three retail hosts (429,
+  403, timeout); the session re-sent the same fetch through delegated sub-agents, inside a
+  `Retry-After` window, and reported the pages as unobtainable. One local `web-fetch.py` request
+  to the store's own product JSON then succeeded on the first try. Asked about it, the instance's
+  user stated the intended policy: the native fetch is the default, and the higher rungs are used
+  only when it fails. The new subsection says so. It also settles what the old text left open,
+  since the gate bullet's "403, 429 … mean stop … do not retry from elsewhere", read literally,
+  forbade the escalation. A refusal of the built-in fetch is a failure of *that client*, whose
+  identity and network path the toolchain neither controls nor records, and it is answered by
+  escalating to the local recipes; a refusal a recipe draws is the host's answer, and stops. The
+  gate bullet now points at the exception rather than restating it (rule 9). Also stated:
+  re-sending a refused built-in fetch, directly or through a sub-agent, is not an escalation; the
+  built-in fetch is acquisition like any other (consent gate, session budget); and since it
+  stores nothing under `_generated/fetch/`, a capture that needs the original or its provenance
+  row comes from a recipe.
+- **Swept, no change needed:** the ingestion-toolchain page's run-fetches-locally rule (it is the
+  reason the escalation is local, and is now cited from the ladder rather than restated), its
+  *fetch politely, escalate deliberately* item, AGENTS rule 7's consent gate, and the
+  *Acquisition budget* section, which already binds a harness's built-in fetch.
+
 ## 2026-09-21
 
 - **New MUST rule 11 — personal figures stay in `.personal-shared/`; tracked files point at

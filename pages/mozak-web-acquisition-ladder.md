@@ -5,7 +5,7 @@ type: note
 domain: [meta]
 tags: [workflow, tooling]
 created: 2026-09-09
-updated: 2026-09-14
+updated: 2026-11-05
 status: growing
 ---
 
@@ -51,6 +51,28 @@ call* below.
 bytes in the capture's `capture-method:`. The policy file's single `advanced_acquisition` toggle
 caps how far a session may climb unaided; it ships `false` (rungs T0–T2), so every rung
 above is a decision you make.
+
+### The default client is the harness's own fetch; the recipes are the escalation
+
+The rungs say *what* to try, in which order; this says *which client* tries it. Where the
+agent's harness has a built-in page-reading tool, that tool is the default for T0 and T1: aim it
+at the structured endpoint first, then at the page. It needs no setup and is already in the
+loop. The recipes are the escalation path, not the starting point.
+
+A refusal of the built-in fetch (403, 429, a timeout, a challenge page, a JavaScript shell with
+no content) is a recorded failure of **that client**, not yet the host's answer to you. The
+built-in tool fetches under the harness's own identity and from wherever the harness runs,
+neither of which this toolchain controls or records, and hosts refuse it wholesale often enough
+that its failure says little about the page (it drew a 403 on g2.com in
+[[2026-09-09-web-acquisition-research]]). So the next step is the recipes: `web-fetch.py` at the
+same rung, run locally per the run-fetches-locally rule in [[mozak-ingestion-toolchain]], then up
+the ladder. **Never re-send the refused built-in fetch**, directly or through a delegated
+sub-agent: a retry is not an escalation. Once a recipe draws the refusal, the host has answered
+*you*, and the gate in *Your context, your call* applies.
+
+The built-in fetch is acquisition like any other: it waits on consent (AGENTS rule 7) and spends
+the session's *Acquisition budget*. It writes nothing under `_generated/fetch/`, so a capture that
+needs the stored original or its provenance row comes from a recipe.
 
 ### Rung T0 — the roster worth checking first
 
@@ -184,7 +206,9 @@ Three positions are jurisdiction-neutral and shaped the tooling:
   the run, and `run` showing its plan before `--yes`. Nothing follows a link on its own; the
   protocol is that the agent shows the user the plan first.
 - **The host's answers are the gate, and they are respected.** 403, 429 and a challenge page
-  mean stop: honour `Retry-After`, do not retry from elsewhere. **Captcha solvers, proxy
+  mean stop: honour `Retry-After`, do not retry from elsewhere. (The one exception is a refusal
+  of the harness's built-in fetch, which is answered by escalating to the recipes, per *The
+  default client is the harness's own fetch* above.) **Captcha solvers, proxy
   rotation to evade a block, paywall circumvention, credential sharing and fake accounts are
   outside this toolchain** — not knobs, not rungs; `advanced_acquisition` does not reach them.
   That is the line Perplexity crossed in 2025 — not user-direction and not a browser UA, but
