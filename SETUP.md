@@ -125,23 +125,36 @@ python3 tools/recipes/scholar-lookup.py 10.1038/nature14539        # papers: reg
 python3 tools/recipes/web-worklist.py add <url> --why "..."       # then `show`, then `run --yes`
 python3 tools/recipes/web-har-harvest.py raw/session.har          # rung T6: a HAR you exported
 
-# Rungs T3/T4 need `uv` (not in Ubuntu apt; user-level, no sudo, rc files untouched):
+# uv: the user-level installer most of this block relies on (no sudo, any distribution, rc
+# files untouched; not in Ubuntu's apt). User-level first is the tool policy: why, and when
+# sudo is the right call instead, is in pages/mozak-ingestion-toolchain.md.
 curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --no-modify-path
+
+# Rungs T3/T4:
 ~/.local/bin/uv run tools/recipes/web-render.py --install         # once: full Chromium, ~115 MB, user-level
 ~/.local/bin/uv run tools/recipes/web-render.py <url>             # T4: disposable sandboxed browser
 ~/.local/bin/uv run tools/recipes/web-impersonate.py <url>        # T3: browser TLS handshake
 # Both refuse unless advanced_acquisition = true. If Chromium fails to launch on missing system
 # libraries, that one step needs sudo: `playwright install-deps chromium`.
 
+# yt-dlp: install it with uv, NOT from your distribution. As of 2026 YouTube needs three pieces:
+# a current yt-dlp, a JavaScript runtime, and the yt-dlp-ejs challenge solver. Distribution
+# packages lag, most ship no solver, and their Node is often below yt-dlp's minimum; this one
+# line brings all three on any distribution (Deno arrives as a Python wheel; the last flag puts
+# `deno` on PATH too). Why each piece: pages/mozak-ingestion-toolchain.md, the yt-dlp row.
+~/.local/bin/uv tool install --pre "yt-dlp[default,deno]" --with-executables-from deno
+~/.local/bin/uv tool upgrade yt-dlp       # YouTube breaks old versions: upgrade before blaming a video
+yt-dlp -v 2>&1 | grep -E "JS runtimes|Optional libraries"   # want deno-<version>, and yt_dlp_ejs listed
 # Transcript without downloading the video (run LOCALLY — YouTube blocks cloud IPs).
 # json3 is YouTube's native timed-text JSON: no rolling duplicates to clean up.
-python3 tools/recipes/yt-transcript.py "<url>"
-# Full YouTube support needs a JS runtime as of 2026, or yt-dlp degrades silently:
-pip install -U --pre "yt-dlp[default,deno]"     # ships Deno as a wheel, no system package
+python3 tools/recipes/yt-transcript.py "<url>"   # warns when yt-dlp reports a missing piece
 # No captions? yt-dlp the audio, transcribe with Whisper.
 
-# pandoc: install the release .deb from github.com/jgm/pandoc/releases —
-# distro packages lag 1-3 years and predate the pptx/xlsx readers.
+# pandoc: user-level too. Distribution packages lag 1-3 years and predate the pptx/xlsx
+# readers; the release tarball is one self-contained binary (amd64 shown, arm64 exists).
+V=3.13   # latest as of 2026-11: github.com/jgm/pandoc/releases
+curl -fsSL "https://github.com/jgm/pandoc/releases/download/$V/pandoc-$V-linux-amd64.tar.gz" \
+  | tar -xz -C ~/.local --strip-components=1     # -> ~/.local/bin/pandoc, plus its man pages
 ```
 
 The policy file is where your judgement lives: `advanced_acquisition` (rungs beyond T2),
@@ -154,6 +167,29 @@ Recipes that declare Python packages (`web-render.py`, `web-impersonate.py`) run
 `uv run` — PEP 723 inline metadata, resolved into a throwaway environment on first run, nothing
 installed globally; the venv fallback is in [tools/recipes/README.md](tools/recipes/README.md).
 The core never needs uv, and `graph.py check` passes on a clone with nothing installed.
+
+### System tools: the one place sudo is right
+
+Codecs and native libraries are what distributions maintain well, so these come from your
+package manager. Install only what a task needs. An agent proposes the line for **your**
+distribution and waits for you to run it (the tool policy in
+[pages/mozak-ingestion-toolchain.md](pages/mozak-ingestion-toolchain.md)); it never holds the
+password.
+
+| Tool | Needed for | Debian / Ubuntu | Fedora | Arch |
+|---|---|---|---|---|
+| `ffmpeg` | audio for Whisper, `ffprobe` | `ffmpeg` | `ffmpeg-free` (full codecs: RPM Fusion's `ffmpeg`) | `ffmpeg` |
+| `pdftotext` | a PDF's text layer | `poppler-utils` | `poppler-utils` | `poppler` |
+| `tesseract` | OCR of scans | `tesseract-ocr` (+ `tesseract-ocr-<lang>`) | `tesseract` (+ `tesseract-langpack-<lang>`) | `tesseract` + `tesseract-data-<lang>` |
+
+```bash
+sudo apt install ffmpeg poppler-utils tesseract-ocr            # Debian / Ubuntu
+sudo dnf install ffmpeg-free poppler-utils tesseract           # Fedora
+sudo pacman -S ffmpeg poppler tesseract tesseract-data-eng     # Arch
+```
+
+Another distribution: look the tool up on [repology.org](https://repology.org), which lists
+every distribution's package name and version for it.
 
 ## 7. Definition of done (every writing session)
 

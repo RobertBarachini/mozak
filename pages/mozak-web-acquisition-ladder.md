@@ -5,7 +5,7 @@ type: note
 domain: [meta]
 tags: [workflow, tooling]
 created: 2026-09-09
-updated: 2026-11-05
+updated: 2026-11-07
 status: growing
 ---
 
@@ -86,6 +86,7 @@ Verified free and keyless on 2026-09-09 unless noted ([[2026-09-09-web-acquisiti
 | **Scholarly** | Crossref · Europe PMC · arXiv · PubMed baseline FTP · Unpaywall · OpenAIRE | Europe PMC needs no key *and* no email. **OpenAlex went metered in 2026-02** — prefer its CC0 snapshot to its search API. arXiv's OAI-PMH **moved to `oaipmh.arxiv.org`** |
 | **Archives** | **Wayback CDX** · **Common Crawl** | CDX over 30 years, ~0.4 req/s. Never the *availability* API — it 429s after roughly one request. **TimeTravel is NXDOMAIN** |
 | **Company/finance** | **SEC** (`data.sec.gov` + nightly bulk zips) · **GLEIF** (CC0, no observed limit) | SEC needs **no key** — "EDGAR API key" sellers are resellers; a declared UA is mandatory. GLEIF is the entity spine everything else joins to |
+| **Code hosting** (verified 2026-11-07) | **GitHub REST API**, anonymous (`curl -H "Accept: application/vnd.github+json" https://api.github.com/repos/<o>/<r>/…`) · **`raw.githubusercontent.com`** for files and wiki pages (`/wiki/<o>/<r>/<Page>.md`) | Issues, releases, language stats and file trees come back as JSON, keyless, at **60 requests per hour per IP**; raw files do not count against it. **Not `gh`**: it refuses every command, public reads included, without a login or `GH_TOKEN`, and a login hands an agent write access to the human's repositories. `gh` is for when the human issues a token scoped to what they want an agent to do ([[2026-11-07-yt-dlp-javascript-runtime-research]]) |
 | **Any site** | `robots.txt` `Sitemap:` lines → feeds → `llms.txt` → JSON-LD → `/.well-known/security.txt` | A sitemap is the publisher's own complete URL inventory with `lastmod`. `security.txt` gives you a human to ask for a dump — the most-skipped move on the ladder |
 
 **The pattern worth internalising: good sources are shaped as bulk snapshot + API for
@@ -309,6 +310,8 @@ history and process tables — never use it.
 - [[2026-09-09-web-acquisition-research]] — the measured probes behind the "UA spoofing is
   useless" and "archives recover blocked pages" claims, the anti-bot benchmark, and the legal
   citations with their per-claim evidence grading and unverified list.
+- [[2026-11-07-yt-dlp-javascript-runtime-research]] — the code-hosting T0 row: GitHub's anonymous
+  rate limit, and the test showing `gh` refuses public reads without a login.
 - [[mozak-ingestion-toolchain]] — the tool policy this page's rungs obey (probe first, degrade
   loudly, run fetches locally) and the drain recipes that take over once bytes exist.
 - [[mozak-store-the-delta]] — the admission doctrine that makes the cache disposable and keeps the

@@ -14,6 +14,47 @@ in its own journal.
 
 Newest first.
 
+## 2026-11-07
+
+- **`yt-dlp` is installed with `uv`, never from the distribution, and the reasoning now has a
+  home.** An instance's transcript fetch printed `yt-dlp`'s no-runtime warning, and SETUP's fix,
+  `pip install -U --pre "yt-dlp[default,deno]"`, could not run on Ubuntu 26.04: no pip, and PEP
+  668 refuses system-wide installs anyway. Behind it sat a gap the old line papered over: YouTube
+  needs a JavaScript runtime *and* the `yt-dlp-ejs` challenge solver, which only Arch packages, and
+  distribution Node is often below `yt-dlp`'s minimum (18 on Ubuntu 24.04, 20 on Debian 13). SETUP
+  §6 now installs all three pieces in one user-level line, `uv tool install --pre
+  "yt-dlp[default,deno]" --with-executables-from deno`, with an upgrade line and a one-line check.
+  [pages/mozak-ingestion-toolchain.md](pages/mozak-ingestion-toolchain.md) gains a subsection with
+  the why: the three pieces, Deno as `yt-dlp`'s recommended runtime, Node 22+ as the alternative,
+  Bun deprecated in `yt-dlp` past 1.3.14. The evidence is a new shipped capture,
+  [sources/2026-11-07-yt-dlp-javascript-runtime-research.md](sources/2026-11-07-yt-dlp-javascript-runtime-research.md),
+  every claim in it a primary-source quote or a measurement.
+- **`yt-transcript.py` asks `yt-dlp` whether it is whole, instead of searching PATH for a
+  runtime.** The PATH check failed both ways in one session: it warned about a Deno that `yt-dlp`
+  found inside its own environment, and it would have passed a distribution `yt-dlp` that had Deno
+  on PATH but no solver. `yt-dlp -v` with no URL prints, offline, the runtimes it accepts (marking
+  any below its minimum) and whether `yt_dlp_ejs` imports; the recipe parses that and warns per
+  missing piece, pointing to SETUP §6 instead of pasting an install command (the pasted one was
+  the line that rotted). Two tests cover the four states seen on real machines; 132 tests pass.
+- **Tool policy rule 2: user-level first, sudo only for system plumbing.** Installs that need no
+  sudo (`uv tool`, a vendor's release binary into `~/.local/bin`, `uv run`) behave the same on
+  every distribution, are easy for an inexperienced user to undo, and keep fast-moving tools
+  current where a stable distribution freezes them. Sudo stays for codecs and native libraries
+  (`ffmpeg`, `poppler`, `tesseract`), and the agent then proposes the command for the user's
+  distribution, read from `.personal-shared/` or asked, never inferred from the shell, and waits
+  for the human to run it. SETUP §6 gains a per-distribution table for those three (Debian/Ubuntu,
+  Fedora, Arch, with repology.org for the rest), and `pandoc` moves from the release `.deb` (sudo)
+  to the release tarball's binary in `~/.local/bin`.
+- **GitHub reads without a login** join the ladder's T0 roster. `gh` refuses every command,
+  public reads included, without a login or `GH_TOKEN`, and a login hands an agent write access to
+  the human's repositories; the anonymous REST API (60 requests per hour per IP) and
+  `raw.githubusercontent.com` (files and wiki pages, outside that limit) do the reading. `gh` is for
+  when the human issues a scoped token.
+- **Two stale copies fixed in the sweep:** the example header in
+  [tools/recipes/README.md](tools/recipes/README.md) was a copy of `yt-transcript.py`'s and still
+  showed its retired `--vtt` flag; it is now placeholders plus a pointer to a real header. The
+  toolchain page's seed-recipe line had the same drift.
+
 ## 2026-11-05
 
 - **The ladder now names its default client: the harness's built-in fetch first, the recipes

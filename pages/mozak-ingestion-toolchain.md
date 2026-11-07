@@ -5,7 +5,7 @@ type: note
 domain: [meta]
 tags: [workflow, tooling]
 created: 2026-07-07
-updated: 2026-09-09
+updated: 2026-11-07
 status: growing
 ---
 
@@ -21,11 +21,19 @@ sessions behave consistently instead of each rediscovering an approach.
 1. **Probe before use** — `command -v <tool>` (or `<tool> --version`). Never assume. A probe
    describes the shell the session runs in, which may not be the user's machine — environment
    facts come from `.personal-shared/` (its AGENTS layout row), not from probing.
-2. **Missing tool: degrade loudly, never silently.** If installing is within the
-   session's granted privileges, offer it with the exact command (`sudo apt install
-   ffmpeg`, `uv tool install yt-dlp`, …). If not, tell the human what is missing
-   and what it was needed for, and take a degraded path only if one exists —
-   stating so in the capture and journal. Never fake or skip a result quietly.
+2. **Missing tool: user-level first, sudo only for system plumbing, degrade loudly — never
+   silently.** Prefer an install that needs no sudo when a clean one exists: `uv tool` for
+   Python-distributed tools (`yt-dlp` with its runtime), a vendor's release binary into
+   `~/.local/bin` (`pandoc`), `uv run` for recipe dependencies. It behaves the same on every
+   distribution, touches nothing system-wide, is easy for an inexperienced user to undo, and
+   keeps fast-moving tools current where a stable distribution freezes them for years (exact
+   lines: SETUP §6). Sudo is right for the plumbing distributions maintain well — codecs and
+   native libraries (`ffmpeg`, `poppler`, `tesseract`). Then give the exact command **for the
+   user's distribution**, read from `.personal-shared/` per rule 1 or asked, never inferred from
+   the shell (repology.org has every distribution's package names), and wait for the human to
+   run it: the agent never holds the password. If nothing gets installed, tell the human what is
+   missing and what it was needed for, and take a degraded path only if one exists — stating so
+   in the capture and journal. Never fake or skip a result quietly.
 3. **Run fetches locally** — YouTube and friends block cloud/datacenter IPs.
 4. **Never modify raw originals in place** — conversions produce new files; the
    raw item is removed only after its capture is complete (per [[mozak-research-flow]]).
@@ -40,11 +48,11 @@ sessions behave consistently instead of each rediscovering an approach.
 
 | Tool | Use for |
 |---|---|
-| `yt-dlp` | Transcripts without the video (`--skip-download --write-subs --write-auto-subs --sub-format json3`; **prefer `json3` — YouTube's native timed-text JSON has none of VTT's rolling duplicates**); audio for Whisper (`-x --audio-format wav`); metadata (`--dump-json`). **Needs a JavaScript runtime for full YouTube support as of 2026** — without one it degrades silently, so probe for `deno`/`node` and say so ([[2026-09-09-web-acquisition-research]]). `yt-transcript.py` passes `.personal-shared/cookies.txt` through when present and `advanced_acquisition` is set — for age-restricted or members-only content; public captions need no cookies, and a daily-profile export risks the Google account |
+| `yt-dlp` | Transcripts without the video (`--skip-download --write-subs --write-auto-subs --sub-format json3`; **prefer `json3` — YouTube's native timed-text JSON has none of VTT's rolling duplicates**); audio for Whisper (`-x --audio-format wav`); metadata (`--dump-json`). **Install it with `uv`, never from the distribution** (SETUP §6): YouTube also needs a JavaScript runtime and the `yt-dlp-ejs` solver, and missing either degrades quietly; the reasoning is in *`yt-dlp` and its JavaScript runtime* below. `yt-transcript.py` checks both from yt-dlp's own `-v` header, and passes `.personal-shared/cookies.txt` through when present and `advanced_acquisition` is set — for age-restricted or members-only content; public captions need no cookies, and a daily-profile export risks the Google account |
 | `ffmpeg` / `ffprobe` | Inspect (`ffprobe -v error -show_format -show_streams`) and convert media — e.g. downmix to 16 kHz mono WAV before Whisper |
 | `whisper` | ASR when no captions exist (feed it ffmpeg-prepared audio) |
 | `pdftotext` (poppler) | PDF → text (`-layout` preserves columns); scanned PDFs need OCR (`tesseract`) instead |
-| `pandoc` | docx / epub / html → clean Markdown for captures. Use `-t gfm --wrap=none --extract-media=assets/<slug>`: the default hard-wrap turns every later one-word edit into a whole-paragraph diff, and plain `-t markdown` emits fenced-div syntax that renders as literal noise in Obsidian. **Distro packages lag 1–3 years — install the release `.deb`** |
+| `pandoc` | docx / epub / html → clean Markdown for captures. Use `-t gfm --wrap=none --extract-media=assets/<slug>`: the default hard-wrap turns every later one-word edit into a whole-paragraph diff, and plain `-t markdown` emits fenced-div syntax that renders as literal noise in Obsidian. **Distro packages lag 1–3 years — install the release tarball's binary into `~/.local/bin`** (SETUP §6, no sudo) |
 | `file`, `iconv` | Identify unknown raw items; fix text encodings (Windows-125x exports and similar) |
 | `jq`, `unzip` / `tar` | Explore JSON dumps; unpack archives (then recurse the drain over the contents) |
 | `curl` / `wget` | One-off fetches and probing. For anything that should leave provenance, prefer the recipe below |
@@ -56,6 +64,37 @@ sessions behave consistently instead of each rediscovering an approach.
 | `tools/recipes/web-render.py` | `uv run`; rung T4/T5 — a disposable, repo-scoped Chromium: fresh profile per run, seeded only from your cookie jar, third parties blocked, redacted HAR. `--install` once. `advanced_acquisition` only |
 | `tools/recipes/policy.py` | Prints the effective acquisition policy (shipped defaults + `.personal-shared/` overrides) and the provenance string stamped into every fetch |
 
+### `yt-dlp` and its JavaScript runtime (verified 2026-11-07)
+
+Since `yt-dlp` 2025.11, YouTube support takes three pieces: `yt-dlp` itself, a JavaScript
+runtime to run YouTube's player challenges, and the `yt-dlp-ejs` scripts that solve them
+([[2026-11-07-yt-dlp-javascript-runtime-research]]). Missing either of the last two does not
+fail: `yt-dlp` falls back to YouTube clients that pose no challenge and says so in a single
+warning line, so formats go missing quietly, for as long as YouTube keeps those clients alive.
+That is why SETUP §6 installs it the way it does:
+
+- **Not from the distribution.** As of 2026-11 only Arch packages the solver; Debian, Ubuntu,
+  Fedora and openSUSE do not. Distribution `yt-dlp` trails YouTube by months, and distribution
+  Node is often below `yt-dlp`'s minimum of 22 (Ubuntu 24.04 ships 18, Debian 13 ships 20).
+  `pip` cannot install system-wide on current Debian-family systems at all (PEP 668). Stable
+  distributions freeze versions at release by design; that suits system libraries and fails a
+  tool chasing a site that changes weekly.
+- **One `uv` line brings all three, without sudo.** `uv tool install --pre
+  "yt-dlp[default,deno]"`: the `default` group carries `yt-dlp-ejs`, the `deno` extra carries
+  Deno as a Python wheel, and `--pre` takes the nightly build, which `yt-dlp` names "the
+  recommended channel for regular users". `--with-executables-from deno` also puts `deno` on
+  PATH; `yt-dlp` finds it inside its own environment either way.
+- **Deno, not Bun.** Deno is `yt-dlp`'s recommended runtime and the only one on by default, and
+  `yt-dlp` runs the solver in it with network imports, prompts, config files and npm all
+  disabled. Node 22+ works once enabled (`--js-runtimes node`); QuickJS works but can take
+  minutes. Bun is deprecated in `yt-dlp` and unsupported after 1.3.14, the last release before
+  Bun's rewrite from Zig to Rust; `yt-dlp` cites that rewrite and Bun's lack of sandboxing
+  options.
+- **Check it by asking `yt-dlp`, not PATH.** `yt-dlp -v` with no URL prints, offline, the
+  runtimes it accepts (marking any below its minimum "unsupported") and whether `yt_dlp_ejs`
+  imports. A runtime on PATH proves neither: a distribution `yt-dlp` with Deno on PATH still has
+  no solver. `yt-transcript.py` reads that header and warns.
+
 ## Executable recipes (`tools/recipes/`)
 
 Known-good typed transformations ("input A of type Y → output B of type X") live
@@ -63,9 +102,9 @@ as runnable scripts with contract headers — catalog via
 `grep -rA4 "^# recipe:" tools/recipes/`. **Check there before hand-rolling; on the
 second hand-roll of the same transformation, promote it to a recipe** (rule of
 two) and upstream it so every instance pulls it. Instance-private ones go in
-`tools/recipes/local/`. Seed recipe: `yt-transcript.py` (YouTube URL or existing
-`--vtt` file → clean deduplicated transcript text — encapsulates the VTT
-rolling-duplicate cleanup below).
+`tools/recipes/local/`. Seed recipe: `yt-transcript.py` (YouTube URL, or an existing
+subtitle file via `--sub` → clean transcript text — `json3` preferred, and the VTT
+rolling-duplicate cleanup below for everything else).
 
 ## raw/ drain recipes
 
@@ -95,3 +134,7 @@ rolling-duplicate cleanup below).
   JavaScript-runtime requirement in `yt-dlp`, the pandoc flag set, and the two gaps this
   page's roster had drifted into (a named tool that was not installed, and a silent
   degradation nobody had probed for).
+- [[2026-11-07-yt-dlp-javascript-runtime-research]] — the three pieces `yt-dlp` needs and
+  why `uv` is the install path, the runtime choice (Deno; Node 22+; Bun deprecated), the
+  offline `-v` check the recipe now uses, distribution package versions, and the user-level
+  first install policy in rule 2.
