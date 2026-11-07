@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Instance birth checklist — SETUP §1–§3 as one idempotent command.
+"""Instance birth checklist — SETUP §1–§3 (Born by clone through Make it
+yours) as one idempotent command.
 
 Usage:
   python3 tools/bootstrap.py                          # print the checklist; exit 0 iff ready
@@ -78,7 +79,7 @@ def remote_state(rem):
     when the folder is not a git repository."""
     if rem is None:
         return (False, "not a git repository",
-                "clone the template instead of downloading it — SETUP §1 (a clone keeps the "
+                "clone the template instead of downloading it — SETUP §1, Born by clone (a clone keeps the "
                 "template attached as upstream, which the SYNC pull ritual depends on)")
     if "template" in rem:
         return (True, f"attached ({rem['template']})", "")
@@ -90,7 +91,7 @@ def remote_state(rem):
                 "if that origin IS the template: git remote rename origin template · if it is your own "
                 "remote: git remote add template <template-url> && git fetch template")
     return (False, "no remotes — this folder was copied, not cloned",
-            "SETUP §1 to start over from a clone, or SYNC 'First stitch' to attach the template to a copy")
+            "SETUP §1 (Born by clone) to start over from a clone, or SYNC 'First stitch' to attach the template to a copy")
 
 
 def readme_is_template(text: str) -> bool:
@@ -245,7 +246,7 @@ def checklist(root: Path, attach: bool = False, today: str | None = None) -> dic
     is_tpl = readme.exists() and readme_is_template(readme.read_text(encoding="utf-8"))
     step("instance-readme", "instance README", not is_tpl,
          "README.md still describes the template" if is_tpl else "README.md describes this instance",
-         "rewrite README.md to describe this instance — what it is for, whose it is (SETUP §3)" if is_tpl else "")
+         "rewrite README.md to describe this instance — what it is for, whose it is (SETUP §3, Make it yours)" if is_tpl else "")
 
     # 7. founding journal — an entry that is not one of the template's
     jdir = root / "journals"
@@ -268,7 +269,7 @@ def checklist(root: Path, attach: bool = False, today: str | None = None) -> dic
     ok, detail = journal_state(local, shipped, today, changed)
     detail += note
     step("founding-journal", "founding journal", ok, detail,
-         "" if ok else f"write journals/{today}.md — what this instance is for and what was set up (SETUP §3)")
+         "" if ok else f"write journals/{today}.md — what this instance is for and what was set up (SETUP §3, Make it yours)")
 
     optional = []
     if rem and "origin" in rem and "template" not in rem and repo_name(rem["origin"]) == TEMPLATE_REPO:
@@ -281,7 +282,7 @@ def checklist(root: Path, attach: bool = False, today: str | None = None) -> dic
     rc, hooks = git(root, "config", "--get", "core.hooksPath")
     optional.append("pre-commit ownership guard — " + ("on" if rc == 0 and hooks.strip() == "tools/hooks"
                                                          else "off (`git config core.hooksPath tools/hooks`)"))
-    optional.append("viewers, MCP — SETUP §4–§5, when wanted")
+    optional.append("viewers, MCP — SETUP §4–§5 (Viewers, MCP servers), when wanted")
 
     ready = all(s["ok"] for s in steps)
     nxt = next((s["id"] for s in steps if not s["ok"]), None)
@@ -289,7 +290,7 @@ def checklist(root: Path, attach: bool = False, today: str | None = None) -> dic
 
 
 def render(res: dict) -> str:
-    lines = ["bootstrap: instance readiness — SETUP §1–§3 as a checklist; re-run until `ready: yes`"]
+    lines = ["bootstrap: instance readiness — SETUP §1–§3 (Born by clone through Make it yours) as a checklist; re-run until `ready: yes`"]
     for s in res["steps"]:
         mark = "✓" if s["ok"] else "✗"
         lines.append(f"  {mark} {s['label']:<19} {s['detail']}")

@@ -2,7 +2,7 @@
 # recipe: yt-transcript
 # input:  YouTube URL, or an existing .json3/.vtt subtitle file via --sub
 # output: clean transcript text on stdout (VTT rolling repeats collapsed; json3 has none)
-# needs:  URL mode: yt-dlp + a JS runtime + yt-dlp-ejs (SETUP §6, no sudo); --sub: nothing
+# needs:  URL mode: yt-dlp + a JS runtime + yt-dlp-ejs (SETUP §6, Ingestion toolchain); --sub: nothing
 # usage:  python3 tools/recipes/yt-transcript.py <url> [--lang en] [--keep-timestamps]
 #         python3 tools/recipes/yt-transcript.py --sub path/to/file.json3
 """Fetch and/or clean a YouTube transcript into capture-ready plain text.
@@ -19,7 +19,7 @@ requested and yt-dlp prefers the former. Run locally: cloud/datacenter IPs get
 blocked. Full YouTube support needs a JavaScript runtime *and* the yt-dlp-ejs
 challenge solver; the recipe asks yt-dlp itself whether both are present (its
 offline `-v` header), because a runtime on PATH proves neither — see the
-mozak-ingestion-toolchain page for why, SETUP §6 for the install.
+mozak-ingestion-toolchain page for why, SETUP §6 (Ingestion toolchain) for the install.
 
 URL mode is web acquisition, so it is gated on `[consent].acknowledged` like every
 fetch recipe, and it hands `.personal-shared/cookies.txt` to yt-dlp when the jar is
@@ -93,7 +93,7 @@ def clean_sub(path: Path, keep_timestamps: bool = False) -> str:
     return clean_vtt(text, keep_timestamps)
 
 
-SETUP_FIX = "Fix: SETUP.md §6, the yt-dlp block (user-level, no sudo)."
+SETUP_FIX = "Fix: SETUP.md §6 (Ingestion toolchain), the yt-dlp block; user-level, no sudo."
 
 
 def parse_debug_header(text: str):

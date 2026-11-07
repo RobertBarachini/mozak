@@ -132,7 +132,7 @@ drains the file. That keeps the AI harness a [[mozak-plain-text-knowledge-graphs
 lens]] just like a viewer or `grep`: swap Claude Code for another agent, a script, or a
 local model and neither the tool nor the file format changes, because the seam is data,
 not code. Convenience lenses over the same file — a Claude Code `/drain-report` skill,
-or an MCP interface for any harness — are optional setup (SETUP.md §5), never
+or an MCP interface for any harness — are optional setup (SETUP.md §5, MCP servers), never
 dependencies.
 
 ## Sources

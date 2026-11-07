@@ -27,7 +27,7 @@ sessions behave consistently instead of each rediscovering an approach.
    `~/.local/bin` (`pandoc`), `uv run` for recipe dependencies. It behaves the same on every
    distribution, touches nothing system-wide, is easy for an inexperienced user to undo, and
    keeps fast-moving tools current where a stable distribution freezes them for years (exact
-   lines: SETUP §6). Sudo is right for the plumbing distributions maintain well — codecs and
+   lines: SETUP §6, Ingestion toolchain). Sudo is right for the plumbing distributions maintain well — codecs and
    native libraries (`ffmpeg`, `poppler`, `tesseract`). Then give the exact command **for the
    user's distribution**, read from `.personal-shared/` per rule 1 or asked, never inferred from
    the shell (repology.org has every distribution's package names), and wait for the human to
@@ -48,11 +48,11 @@ sessions behave consistently instead of each rediscovering an approach.
 
 | Tool | Use for |
 |---|---|
-| `yt-dlp` | Transcripts without the video (`--skip-download --write-subs --write-auto-subs --sub-format json3`; **prefer `json3` — YouTube's native timed-text JSON has none of VTT's rolling duplicates**); audio for Whisper (`-x --audio-format wav`); metadata (`--dump-json`). **Install it with `uv`, never from the distribution** (SETUP §6): YouTube also needs a JavaScript runtime and the `yt-dlp-ejs` solver, and missing either degrades quietly; the reasoning is in *`yt-dlp` and its JavaScript runtime* below. `yt-transcript.py` checks both from yt-dlp's own `-v` header, and passes `.personal-shared/cookies.txt` through when present and `advanced_acquisition` is set — for age-restricted or members-only content; public captions need no cookies, and a daily-profile export risks the Google account |
+| `yt-dlp` | Transcripts without the video (`--skip-download --write-subs --write-auto-subs --sub-format json3`; **prefer `json3` — YouTube's native timed-text JSON has none of VTT's rolling duplicates**); audio for Whisper (`-x --audio-format wav`); metadata (`--dump-json`). **Install it with `uv`, never from the distribution** (SETUP §6, Ingestion toolchain): YouTube also needs a JavaScript runtime and the `yt-dlp-ejs` solver, and missing either degrades quietly; the reasoning is in *`yt-dlp` and its JavaScript runtime* below. `yt-transcript.py` checks both from yt-dlp's own `-v` header, and passes `.personal-shared/cookies.txt` through when present and `advanced_acquisition` is set — for age-restricted or members-only content; public captions need no cookies, and a daily-profile export risks the Google account |
 | `ffmpeg` / `ffprobe` | Inspect (`ffprobe -v error -show_format -show_streams`) and convert media — e.g. downmix to 16 kHz mono WAV before Whisper |
 | `whisper` | ASR when no captions exist (feed it ffmpeg-prepared audio) |
 | `pdftotext` (poppler) | PDF → text (`-layout` preserves columns); scanned PDFs need OCR (`tesseract`) instead |
-| `pandoc` | docx / epub / html → clean Markdown for captures. Use `-t gfm --wrap=none --extract-media=assets/<slug>`: the default hard-wrap turns every later one-word edit into a whole-paragraph diff, and plain `-t markdown` emits fenced-div syntax that renders as literal noise in Obsidian. **Distro packages lag 1–3 years — install the release tarball's binary into `~/.local/bin`** (SETUP §6, no sudo) |
+| `pandoc` | docx / epub / html → clean Markdown for captures. Use `-t gfm --wrap=none --extract-media=assets/<slug>`: the default hard-wrap turns every later one-word edit into a whole-paragraph diff, and plain `-t markdown` emits fenced-div syntax that renders as literal noise in Obsidian. **Distro packages lag 1–3 years — install the release tarball's binary into `~/.local/bin`** (SETUP §6, Ingestion toolchain; no sudo) |
 | `file`, `iconv` | Identify unknown raw items; fix text encodings (Windows-125x exports and similar) |
 | `jq`, `unzip` / `tar` | Explore JSON dumps; unpack archives (then recurse the drain over the contents) |
 | `curl` / `wget` | One-off fetches and probing. For anything that should leave provenance, prefer the recipe below |
@@ -71,7 +71,7 @@ runtime to run YouTube's player challenges, and the `yt-dlp-ejs` scripts that so
 ([[2026-11-07-yt-dlp-javascript-runtime-research]]). Missing either of the last two does not
 fail: `yt-dlp` falls back to YouTube clients that pose no challenge and says so in a single
 warning line, so formats go missing quietly, for as long as YouTube keeps those clients alive.
-That is why SETUP §6 installs it the way it does:
+That is why SETUP §6 (Ingestion toolchain) installs it the way it does:
 
 - **Not from the distribution.** As of 2026-11 only Arch packages the solver; Debian, Ubuntu,
   Fedora and openSUSE do not. Distribution `yt-dlp` trails YouTube by months, and distribution

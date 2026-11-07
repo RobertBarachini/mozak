@@ -10,8 +10,8 @@ An item enters when a change is weighed and deferred — the CHANGELOG entry for
 names the deferral. It leaves when it lands (the CHANGELOG records the landing) or when the
 reason it was considered is gone, in which case the removing commit says so. Nothing here is
 derivable from a directory listing (AGENTS rule 9): every row is a decision. Instance-setup
-gaps (a JavaScript runtime for `yt-dlp`, `pandoc`) are [SETUP.md](SETUP.md) §6's business, not
-this file's.
+gaps (a JavaScript runtime for `yt-dlp`, `pandoc`) belong to [SETUP.md](SETUP.md) §6 (Ingestion toolchain), not
+this file.
 
 ## Deferred
 

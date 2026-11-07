@@ -14,7 +14,7 @@ Usage:
   python3 tools/annotate.py <report.html>              # serve (implicit) + open a browser
   python3 tools/annotate.py serve <report.html> [--port N] [--no-browser] [--open]
   python3 tools/annotate.py list  <report.html> [--status S]   # print the queue (optionally one status), no server
-  python3 tools/annotate.py mcp   [report.html]        # optional MCP stdio server (see SETUP.md §5)
+  python3 tools/annotate.py mcp   [report.html]        # optional MCP stdio server (see SETUP.md §5, MCP servers)
 
 Annotations land in the report's directory as `annotations.md` (Markdown with a fenced
 JSON anchor per entry). Over VS Code Remote-SSH the localhost port auto-forwards; open
@@ -1079,7 +1079,7 @@ def cmd_list(root: Path, html: str, status: str = None) -> int:
 # A minimal JSON-RPC-2.0-over-stdio MCP server in pure stdlib (the official SDK is a
 # third-party dep, and this is core tooling — stdlib only). Read-only: it exposes the queue to any MCP harness
 # (Claude Code, Cursor, Cline…) without the tool ever becoming a dependency — the file
-# stays the source of truth. Register per SETUP.md §5. stdout is the protocol channel;
+# stays the source of truth. Register per SETUP.md §5 (MCP servers). stdout is the protocol channel;
 # everything human goes to stderr.
 
 MCP_TOOLS = [

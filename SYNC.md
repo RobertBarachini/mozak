@@ -60,7 +60,10 @@ upstreaming: strip names, dates-of-use, domain content, founding-capture wikilin
 
 - `README.md` — template describes the system; an instance describes itself.
 - `SETUP.md` — template opens with bootstrap-from-template; an instance opens with
-  its own provenance note.
+  its own provenance note, and may drop the bootstrap sections or renumber the rest. So any
+  other file that points into SETUP **names the section as well as numbering it** —
+  `SETUP §6 (Ingestion toolchain)`, using the heading's own words — and the pointer still
+  finds its target in an instance where §6 no longer exists. A bare number is a defect.
 - `start-here.md` — a **birth seed**: the template ships the empty front door, then
   never updates an instance's copy again (template-side edits reach only future
   instances). The instance owns it outright — its `## Domains` index grows there.

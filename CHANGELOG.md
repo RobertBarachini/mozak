@@ -14,6 +14,20 @@ in its own journal.
 
 Newest first.
 
+## 2026-11-08
+
+- **Pointers into SETUP name the section, not just its number.** An instance's SETUP may drop
+  the bootstrap sections and renumber the rest (a birth divergence SYNC already listed), and one
+  instance had done exactly that: its SETUP has no §6, so the "SETUP §6" that the recipe's fix
+  hint, the toolchain page, `bootstrap.py` and others print led nowhere there. Every
+  cross-file reference now carries the heading's own words, e.g. `SETUP §6 (Ingestion
+  toolchain)`, `SETUP §5 (MCP servers)`, `SETUP §1–§3 (Born by clone through Make it yours)`.
+  Swept: AGENTS (the `tools/` row), README, ROADMAP, two meta pages, `bootstrap.py`,
+  `annotate.py` and `yt-transcript.py`; 20 references in 8 files. SETUP's references to its own
+  sections stay numbered, since they point within one document an instance edits as a whole.
+  The rule has one home, SYNC's *Known birth divergences* entry for SETUP, which now says a bare
+  number is a defect.
+
 ## 2026-11-07
 
 - **`yt-dlp` is installed with `uv`, never from the distribution, and the reasoning now has a

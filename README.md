@@ -70,7 +70,7 @@ No agent that can run commands yet? Do the first step yourself —
 `git clone https://github.com/RobertBarachini/mozak.git mybrain` — then open the folder in one
 that can, and paste the block. Clone rather than pressing GitHub's *"Use this template"*
 button: it copies files with an unrelated history and no `template` remote, which severs the
-ancestry the [SYNC.md](SYNC.md) pull ritual depends on ([SETUP.md](SETUP.md) §1).
+ancestry the [SYNC.md](SYNC.md) pull ritual depends on ([SETUP.md](SETUP.md) §1, Born by clone).
 
 ## 💡 What people ask it
 
@@ -125,7 +125,7 @@ tooling, and the meta-domain pages that document the system. Living **instances*
 (your actual knowledge bases) are born from it and stay connected — pulling system
 updates down and upstreaming generalizable improvements — per the contract in
 [SYNC.md](SYNC.md). The by-hand path — clone, attach the template as upstream, smoke-test —
-is [SETUP.md](SETUP.md) §1–§3; `python3 tools/bootstrap.py` walks the same steps as a
+is [SETUP.md](SETUP.md) §1–§3 (Born by clone through Make it yours); `python3 tools/bootstrap.py` walks the same steps as a
 checklist.
 
 ## 🧭 Orientation
