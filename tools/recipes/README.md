@@ -9,14 +9,16 @@ re-deriving parsing every session. One file per recipe — Python or plain bash.
 Every recipe opens with a machine-scannable header:
 
 ```
-# recipe: yt-transcript
-# input:  YouTube URL (or an existing .vtt file via --vtt)
-# output: clean deduplicated transcript text on stdout
-# needs:  yt-dlp (only for URL mode)
-# usage:  python3 tools/recipes/yt-transcript.py <url> [--lang en] [--keep-timestamps]
+# recipe: <name>
+# input:  <what goes in, and its type>
+# output: <what comes out, and where>
+# needs:  <tools or packages, or "nothing (stdlib)">
+# usage:  python3 tools/recipes/<name>.py <args>
 ```
 
-The catalog is therefore just: `grep -rA4 "^# recipe:" tools/recipes/`.
+A real one: `head -6 tools/recipes/yt-transcript.py`. (This used to be a copy of that header,
+and it went stale when the recipe gained `--sub`; the placeholders cannot.) The catalog is
+therefore just: `grep -rA4 "^# recipe:" tools/recipes/`.
 
 ## Rules
 

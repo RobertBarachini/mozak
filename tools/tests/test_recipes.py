@@ -990,6 +990,40 @@ class Transcript(unittest.TestCase):
                "00:00:05.000 --> 00:00:07.000\nnext bit\n")
         self.assertEqual(self.yt.clean_vtt(vtt), "rolling line\nnext bit")
 
+    def test_runtime_report_comes_from_ytdlps_own_header(self):
+        """The four states seen on real machines (2026-11): whole, a distribution
+        yt-dlp with a runtime but no solver, a runtime below yt-dlp's minimum, and a
+        yt-dlp too old to report at all."""
+        p, warn = self.yt.parse_debug_header, self.yt.runtime_warnings
+        whole = ("[debug] Optional libraries: certifi-2026.10.23, yt_dlp_ejs-0.8.0\n"
+                 "[debug] JS runtimes: deno-2.9.8\n")
+        self.assertEqual(p(whole), (["deno-2.9.8"], ["deno-2.9.8"], True))
+        self.assertEqual(warn(p(whole)), [])
+        distro = ("[debug] Optional libraries: certifi-2026.01.04, requests-2.32.5\n"
+                  "[debug] JS runtimes: deno-2.9.8\n")
+        w = warn(p(distro))
+        self.assertEqual(len(w), 1)
+        self.assertIn("yt-dlp-ejs", w[0])
+        too_old_node = ("[debug] Optional libraries: yt_dlp_ejs-0.8.0\n"
+                        "[debug] JS runtimes: node-20.19.2 (unsupported)\n")
+        w = warn(p(too_old_node))
+        self.assertEqual(len(w), 1)
+        self.assertIn("node-20.19.2 (unsupported)", w[0])
+        for none in ("none", "none (disabled)"):
+            self.assertEqual(p(f"[debug] JS runtimes: {none}\n")[0], [])
+        self.assertIsNone(p("[debug] yt-dlp version stable@2025.10.22 from yt-dlp/yt-dlp\n"))
+        self.assertEqual(len(warn(None)), 1)
+
+    def test_runtime_fix_points_to_setup_not_a_pasted_command(self):
+        """An install command pasted into a warning rots (one did); the fix has one home."""
+        for w in warn_all(self.yt):
+            self.assertIn("SETUP.md", w)
+            self.assertNotIn("pip install", w)
+
+
+def warn_all(yt):
+    return yt.runtime_warnings(None) + yt.runtime_warnings(([], ["node-18.19.1 (unsupported)"], False))
+
 
 # ------------------------------------------------------------ graph.py ownership parser
 

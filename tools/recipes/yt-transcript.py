@@ -2,7 +2,7 @@
 # recipe: yt-transcript
 # input:  YouTube URL, or an existing .json3/.vtt subtitle file via --sub
 # output: clean transcript text on stdout (VTT rolling repeats collapsed; json3 has none)
-# needs:  yt-dlp + a JS runtime for URL mode; --sub mode is dependency-free
+# needs:  URL mode: yt-dlp + a JS runtime + yt-dlp-ejs (SETUP §6, no sudo); --sub: nothing
 # usage:  python3 tools/recipes/yt-transcript.py <url> [--lang en] [--keep-timestamps]
 #         python3 tools/recipes/yt-transcript.py --sub path/to/file.json3
 """Fetch and/or clean a YouTube transcript into capture-ready plain text.
@@ -16,8 +16,10 @@ thing nobody should re-derive per session.
 
 Human-authored subtitles beat ASR, so both --write-subs and --write-auto-subs are
 requested and yt-dlp prefers the former. Run locally: cloud/datacenter IPs get
-blocked, and full YouTube support now needs a JavaScript runtime — see the
-mozak-ingestion-toolchain page.
+blocked. Full YouTube support needs a JavaScript runtime *and* the yt-dlp-ejs
+challenge solver; the recipe asks yt-dlp itself whether both are present (its
+offline `-v` header), because a runtime on PATH proves neither — see the
+mozak-ingestion-toolchain page for why, SETUP §6 for the install.
 
 URL mode is web acquisition, so it is gated on `[consent].acknowledged` like every
 fetch recipe, and it hands `.personal-shared/cookies.txt` to yt-dlp when the jar is
@@ -91,6 +93,65 @@ def clean_sub(path: Path, keep_timestamps: bool = False) -> str:
     return clean_vtt(text, keep_timestamps)
 
 
+SETUP_FIX = "Fix: SETUP.md §6, the yt-dlp block (user-level, no sudo)."
+
+
+def parse_debug_header(text: str):
+    """Read yt-dlp's own `-v` debug header: (usable, listed, has_ejs), or None when the
+    header carries no "JS runtimes" line (a yt-dlp from before the 2025.11 EJS change).
+
+    The line reads like `[debug] JS runtimes: deno-2.9.8, node-20.19.2 (unsupported)`, or
+    `none` / `none (disabled)`. yt-dlp marks a runtime below its minimum "(unsupported)"
+    and one it could not probe "(unknown)". The challenge solver is the `yt_dlp_ejs`
+    module, which yt-dlp lists under "Optional libraries" whenever it can import it."""
+    listed = libs = None
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("[debug] JS runtimes:"):
+            val = line.split(":", 1)[1].strip()
+            listed = [] if val.startswith("none") else [v.strip() for v in val.split(",") if v.strip()]
+        elif line.startswith("[debug] Optional libraries:"):
+            libs = line.split(":", 1)[1]
+    if listed is None:
+        return None
+    usable = [v for v in listed if not v.endswith(("(unsupported)", "(unknown)"))]
+    return usable, listed, bool(libs) and "yt_dlp_ejs" in libs
+
+
+def runtime_warnings(report) -> list:
+    """parse_debug_header() result -> warning lines; empty when YouTube support is whole."""
+    if report is None:
+        return ["warning: yt-dlp printed no JavaScript-runtime report, so it predates the "
+                "2025.11 change that made a runtime necessary for YouTube. " + SETUP_FIX]
+    usable, listed, has_ejs = report
+    out = []
+    if not usable:
+        out.append(f"warning: yt-dlp sees no usable JavaScript runtime (found: "
+                   f"{', '.join(listed) or 'none'}), so YouTube's challenges go unsolved and "
+                   "formats can go missing. " + SETUP_FIX)
+    if not has_ejs:
+        out.append("warning: this yt-dlp lacks the yt-dlp-ejs challenge solver (distribution "
+                   "packages usually do), so a runtime alone is not enough unless your yt-dlp "
+                   "config sets --remote-components. " + SETUP_FIX)
+    return out
+
+
+def check_runtime() -> None:
+    """Ask yt-dlp itself, offline: `-v` with no URL prints its header and exits 2. A
+    runtime on PATH proves neither that yt-dlp accepts its version nor that the solver
+    is installed, so PATH is not consulted. Degrades loudly, never blocks: captions
+    often still arrive on the degraded path."""
+    try:
+        r = subprocess.run(["yt-dlp", "-v"], capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.TimeoutExpired):
+        return
+    warnings = runtime_warnings(parse_debug_header(r.stderr + "\n" + r.stdout))
+    for w in warnings:
+        print(w, file=sys.stderr)
+    if warnings:
+        print("Continuing on the degraded path.", file=sys.stderr)
+
+
 def fetch_sub(url: str, lang: str) -> Path:
     """Fetch subtitles into a temp dir, preferring json3. Returns a path that outlives
     the temp dir by being copied to a second one the caller never has to clean up."""
@@ -100,16 +161,12 @@ def fetch_sub(url: str, lang: str) -> Path:
         print(refusal, file=sys.stderr)
         sys.exit(2)
     if shutil.which("yt-dlp") is None:
-        sys.exit("error: yt-dlp not found. Install it (e.g. `uv tool install yt-dlp`) "
-                 "or pass an existing file via --sub. (Tool policy: degrade loudly.)")
+        sys.exit("error: yt-dlp not found. " + SETUP_FIX + " Or pass an existing "
+                 "subtitle file via --sub. (Tool policy: degrade loudly.)")
     jar_path, jar_status = _policy.cookies_path(cfg, ROOT)
     if jar_path or "present" in jar_status:
         print(f"note: {jar_status}" + (" — passed to yt-dlp." if jar_path else "."), file=sys.stderr)
-    if not any(shutil.which(rt) for rt in ("deno", "node", "bun", "qjs")):
-        print("warning: no JavaScript runtime found (deno/node/bun/quickjs). As of 2026 "
-              "yt-dlp needs one for full YouTube support and degrades silently without "
-              "it. Install one, e.g. `pip install -U --pre 'yt-dlp[default,deno]'`. "
-              "Continuing on the degraded path.", file=sys.stderr)
+    check_runtime()
     td = Path(tempfile.mkdtemp(prefix="yt-transcript-"))
     cmd = ["yt-dlp", "--skip-download", "--write-subs", "--write-auto-subs",
            "--sub-langs", lang, "--sub-format", "json3/srv3/vtt",
