@@ -5,7 +5,7 @@ type: note
 domain: [meta]
 tags: [workflow, tooling]
 created: 2026-09-09
-updated: 2026-11-07
+updated: 2026-11-10
 status: growing
 ---
 
@@ -87,6 +87,7 @@ Verified free and keyless on 2026-09-09 unless noted ([[2026-09-09-web-acquisiti
 | **Archives** | **Wayback CDX** · **Common Crawl** | CDX over 30 years, ~0.4 req/s. Never the *availability* API — it 429s after roughly one request. **TimeTravel is NXDOMAIN** |
 | **Company/finance** | **SEC** (`data.sec.gov` + nightly bulk zips) · **GLEIF** (CC0, no observed limit) | SEC needs **no key** — "EDGAR API key" sellers are resellers; a declared UA is mandatory. GLEIF is the entity spine everything else joins to |
 | **Code hosting** (verified 2026-11-07) | **GitHub REST API**, anonymous (`curl -H "Accept: application/vnd.github+json" https://api.github.com/repos/<o>/<r>/…`) · **`raw.githubusercontent.com`** for files and wiki pages (`/wiki/<o>/<r>/<Page>.md`) | Issues, releases, language stats and file trees come back as JSON, keyless, at **60 requests per hour per IP**; raw files do not count against it. **Not `gh`**: it refuses every command, public reads included, without a login or `GH_TOKEN`, and a login hands an agent write access to the human's repositories. `gh` is for when the human issues a token scoped to what they want an agent to do ([[2026-11-07-yt-dlp-javascript-runtime-research]]) |
+| **Social platforms** (verified 2026-11-10) | **X:** **FxTwitter**, `api.fxtwitter.com/<user>/status/<id>`, `/2/profile/<user>` and `/2/profile/<user>/statuses` · X's own embed endpoint, `cdn.syndication.twimg.com/tweet-result?id=<id>&token=<any>`, for one post · **Reddit:** **Arctic Shift**, `arctic-shift.photon-reddit.com/api/posts/search?subreddit=<s>` and `/api/comments/search` | JSON with no key, login or challenge, where the platforms refuse a logged-out client: `reddit.com/….json` answers 403 and old.reddit a script shell. The no-login frontends are no fallback: Nitter instances answered with an Anubis challenge or a 429, and the harness refused Redlib instances outright as walled content read through a copy. Arctic Shift is an archive, seconds behind live Reddit when checked ([[2026-11-10-keyless-reads-for-x-and-reddit]]) |
 | **Any site** | `robots.txt` `Sitemap:` lines → feeds → `llms.txt` → JSON-LD → `/.well-known/security.txt` | A sitemap is the publisher's own complete URL inventory with `lastmod`. `security.txt` gives you a human to ask for a dump — the most-skipped move on the ladder |
 
 **The pattern worth internalising: good sources are shaped as bulk snapshot + API for
@@ -312,6 +313,9 @@ history and process tables — never use it.
   citations with their per-claim evidence grading and unverified list.
 - [[2026-11-07-yt-dlp-javascript-runtime-research]] — the code-hosting T0 row: GitHub's anonymous
   rate limit, and the test showing `gh` refuses public reads without a login.
+- [[2026-11-10-keyless-reads-for-x-and-reddit]] — the social-platforms T0 row: the FxTwitter,
+  syndication and Arctic Shift probes, and the refusals from logged-out Reddit, vxtwitter and the
+  frontend instances.
 - [[mozak-ingestion-toolchain]] — the tool policy this page's rungs obey (probe first, degrade
   loudly, run fetches locally) and the drain recipes that take over once bytes exist.
 - [[mozak-store-the-delta]] — the admission doctrine that makes the cache disposable and keeps the

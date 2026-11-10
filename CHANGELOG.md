@@ -14,6 +14,20 @@ in its own journal.
 
 Newest first.
 
+## 2026-11-10
+
+- **The ladder's T0 roster gains a social-platforms row.** X and Reddit closed most logged-out
+  reading during 2026, and an instance's research run found the no-login frontends (Nitter,
+  Redlib) walled off from scripts, so an agent that needed a post or a subreddit's activity had no
+  listed route. Three keyless routes answered with JSON on 2026-11-10, with no key, login or
+  challenge: FxTwitter's API for a post or an account's recent posts, X's own syndication
+  endpoint for one post, and the Arctic Shift archive's post and comment search for Reddit, seconds
+  behind live. The row also says what refused, so a session does not rediscover it: logged-out
+  `reddit.com` JSON (403), old.reddit (a script shell), and the frontend instances (a challenge, a
+  rate limit, or the harness's own refusal). The evidence ships as
+  [sources/2026-11-10-keyless-reads-for-x-and-reddit.md](sources/2026-11-10-keyless-reads-for-x-and-reddit.md),
+  tagged `founding` as SYNC's Ownership table requires of a shipped capture.
+
 ## 2026-11-08
 
 - **Pointers into SETUP name the section, not just its number.** An instance's SETUP may drop
