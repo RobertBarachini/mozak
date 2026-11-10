@@ -27,6 +27,12 @@ Newest first.
   rate limit, or the harness's own refusal). The evidence ships as
   [sources/2026-11-10-keyless-reads-for-x-and-reddit.md](sources/2026-11-10-keyless-reads-for-x-and-reddit.md),
   tagged `founding` as SYNC's Ownership table requires of a shipped capture.
+- **The 2026-11-07 yt-dlp capture gains the `founding` tag it shipped without.** SYNC's Ownership
+  table makes a shipped capture template-owned only when it carries that tag, so
+  [sources/2026-11-07-yt-dlp-javascript-runtime-research.md](sources/2026-11-07-yt-dlp-javascript-runtime-research.md)
+  read as instance-owned in every instance that pulled it. The fix touches its frontmatter only:
+  the append-only rule for captures protects what was captured, and a classification tag is not
+  part of that. Every shipped capture now carries the tag.
 
 ## 2026-11-08
 

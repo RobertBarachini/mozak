@@ -7,7 +7,7 @@ author: interactive agent session (Claude Opus 5.5), measurements on an Ubuntu 2
 retrieved: 2026-11-07
 created: 2026-11-07
 updated: 2026-11-07
-tags: [tooling]
+tags: [founding, tooling]
 ---
 
 # Research: yt-dlp's JavaScript runtime, how to install it, and GitHub reads without a login
