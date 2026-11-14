@@ -16,6 +16,14 @@ Newest first.
 
 ## 2026-11-14
 
+- **The README and fresh-clone tests skip in an instance.** `test_readme_handoff` and two parts
+  of `test_bootstrap` read the live README, or copy the live tree as a fresh clone of the
+  template. An instance's README is its own (SYNC, Known birth divergences), so every instance's
+  suite carried the same 12 failures, and a real failure would hide among them. They now skip
+  when the new `bootstrap.template_checkout` says the checkout is an instance: a `template`
+  remote attached, or an `origin` of its own. It decides from git remotes, never from the README,
+  so in the template a deleted marker still fails its test (checked by deleting it). The template
+  runs all 141 tests; an instance skips 15 and passes the rest. Three tests cover the helper.
 - **`check` lists the syntax AGENTS rule 3 bans.** The rule banned block refs, embeds,
   `key:: value` properties, transclusion and inline hash-tags, yet nothing looked for them, and
   AGENTS rule 7 said outright that `check` "is silent on every rule here". An instance found 60

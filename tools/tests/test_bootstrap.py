@@ -26,6 +26,8 @@ def _load(path: Path):
 
 bs = _load(ROOT / "tools" / "bootstrap.py")
 GIT = ["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid"]
+IS_TEMPLATE = bs.template_checkout(bs.remotes(ROOT))
+IN_INSTANCE = "this checkout is an instance: its README and tree are its own (SYNC, Known birth divergences)"
 
 
 class RepoName(unittest.TestCase):
@@ -61,7 +63,25 @@ class RemoteState(unittest.TestCase):
         self.assertFalse(ok); self.assertIn("copied", detail); self.assertIn("First stitch", action)
 
 
+class TemplateCheckout(unittest.TestCase):
+    def test_template_its_fork_and_an_unattached_clone(self):
+        self.assertTrue(bs.template_checkout({"origin": "git@github.com:someone/mozak.git"}))
+        self.assertTrue(bs.template_checkout({"origin": "https://github.com/a-fork/mozak"}))
+
+    def test_attached_instance_and_own_origin(self):
+        self.assertFalse(bs.template_checkout({"template": "/srv/mozak"}))
+        self.assertFalse(bs.template_checkout({"origin": "git@github.com:o/mozak.git", "template": "/srv/mozak"}),
+                         "a `template` remote settles it")
+        self.assertFalse(bs.template_checkout({"origin": "git@github.com:me/my-brain.git"}),
+                         "an instance's own CI checkout has only its own origin")
+
+    def test_no_remote_to_tell_assumes_the_template(self):
+        self.assertTrue(bs.template_checkout(None))
+        self.assertTrue(bs.template_checkout({}))
+
+
 class Markers(unittest.TestCase):
+    @unittest.skipUnless(IS_TEMPLATE, IN_INSTANCE)
     def test_live_template_readme_carries_the_marker(self):
         """The template's own README must keep the sentence bootstrap keys on."""
         self.assertTrue(bs.readme_is_template((ROOT / "README.md").read_text(encoding="utf-8")))
@@ -110,6 +130,7 @@ class Skeleton(unittest.TestCase):
 
 
 @unittest.skipUnless(shutil.which("git"), "git required")
+@unittest.skipUnless(IS_TEMPLATE, IN_INSTANCE)
 class EndToEnd(unittest.TestCase):
     """A temp clone of this repo's working tree, driven from fresh clone to ready."""
 

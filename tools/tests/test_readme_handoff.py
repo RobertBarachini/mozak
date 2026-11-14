@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """The README's first screen hands a fresh clone to an agent with one pasted block. These
 tests keep that handoff from rotting: everything the block names must exist, the anchors it
-links must match their headings, and the template marker bootstrap keys on must stay.
+links must match their headings, and the template marker bootstrap keys on must stay. They
+guard the template's README, so they skip in an instance, whose README is its own
+(bootstrap.template_checkout decides, from git remotes, never from the README).
 """
 
 import importlib.util
@@ -14,6 +16,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 README = (ROOT / "README.md").read_text(encoding="utf-8")
 HEADING = "## 🤝 Hand it to your agent"
+
+
+def _load_bootstrap():
+    spec = importlib.util.spec_from_file_location("bs", ROOT / "tools" / "bootstrap.py")
+    mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+    return mod
+
+
+bs = _load_bootstrap()
+IS_TEMPLATE = bs.template_checkout(bs.remotes(ROOT))
+IN_INSTANCE = "this checkout is an instance: its README is its own (SYNC, Known birth divergences)"
 
 
 def _anchor(heading: str) -> str:
@@ -31,6 +44,7 @@ def _block_after(heading: str) -> str:
     return m.group(1)
 
 
+@unittest.skipUnless(IS_TEMPLATE, IN_INSTANCE)
 class FirstScreen(unittest.TestCase):
     def test_tldr_table_precedes_the_handoff(self):
         for row in ("| **What** |", "| **How** |", "| **Why** |"):
@@ -52,6 +66,7 @@ class FirstScreen(unittest.TestCase):
             self.assertIn(a, headings, a)
 
 
+@unittest.skipUnless(IS_TEMPLATE, IN_INSTANCE)
 class PastedBlock(unittest.TestCase):
     def setUp(self):
         self.block = _block_after(HEADING)
@@ -78,6 +93,7 @@ class PastedBlock(unittest.TestCase):
             self.assertEqual(r.returncode, 0, cmd)
 
 
+@unittest.skipUnless(IS_TEMPLATE, IN_INSTANCE)
 class Openers(unittest.TestCase):
     """`What people ask it` answers "what do I even do with this" between the handoff and the
     explanation: bold-led bullets, each carrying a quoted prompt and what it became."""
@@ -102,10 +118,9 @@ class Openers(unittest.TestCase):
             self.assertNotRegex(l, r"\d+\s+notes|→", "outcome clauses were dropped by design")
 
 
+@unittest.skipUnless(IS_TEMPLATE, IN_INSTANCE)
 class TemplateMarker(unittest.TestCase):
     def test_marker_survives_in_the_template_readme(self):
-        spec = importlib.util.spec_from_file_location("bs", ROOT / "tools" / "bootstrap.py")
-        bs = importlib.util.module_from_spec(spec); spec.loader.exec_module(bs)
         self.assertIn(bs.TEMPLATE_MARKER, README)
         self.assertGreater(README.index(bs.TEMPLATE_MARKER), README.index("## What this is"),
                            "the marker lives in the explanation, below the handoff")

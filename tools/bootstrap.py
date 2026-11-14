@@ -98,6 +98,21 @@ def readme_is_template(text: str) -> bool:
     return TEMPLATE_MARKER in text
 
 
+def template_checkout(rem) -> bool:
+    """True when this checkout still carries the template's own files: the template itself,
+    a fork, or a fresh clone not yet attached (an `origin` named TEMPLATE_REPO), or a folder
+    with no remote to tell (assume the template, so its guards fail loud). False once it is
+    an instance: a `template` remote attached, or an `origin` of its own. Decided from git
+    remotes, never from the README, so deleting the template marker cannot switch off the
+    test that guards it. Tests of the template's README and of a fresh clone run only when
+    True: an instance's README is its own (SYNC, Known birth divergences)."""
+    if not rem:
+        return True
+    if "template" in rem:
+        return False
+    return "origin" not in rem or repo_name(rem["origin"]) == TEMPLATE_REPO
+
+
 def journal_state(local, shipped, today: str, changed=()):
     """(ok, detail). `local` = journal filenames here; `shipped` = the template's journal
     paths (from `git ls-tree <template-ref> journals/`) or None when unavailable, in which
