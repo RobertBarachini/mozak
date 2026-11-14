@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Stdlib unit tests for tools/graph.py's shipped-rename machinery — the reserved stem
-prefix and the ledger an instance replays with `migrate` (AGENTS `pages/` row, rule 6).
+prefix and the ledger an instance replays with `migrate` (AGENTS `pages/` row, rule 6) —
+and for check's advisory guard against the syntax AGENTS rule 3 bans.
 Every test builds its own temp repo; nothing here reads the live graph, so the suite
 passes in an instance whose own pages legitimately lack the prefix. The prefix itself
 is taken from graph.RESERVED_PREFIX, never spelled out, so a future change of token is
@@ -263,6 +264,66 @@ class TemplateConvention(TempRepo):
         problems = graph.template_convention(self.root)
         self.assertEqual(len(problems), 1)
         self.assertIn("expected date<TAB>old-stem<TAB>new-stem", problems[0])
+
+
+UUID = "64f2c1d0-3b4a-4c5d-8e9f-0a1b2c3d4e5f"
+
+
+class Rule3Syntax(unittest.TestCase):
+    """check's advisory guard for the viewer-specific syntax AGENTS rule 3 bans."""
+
+    def test_each_banned_form_is_found(self):
+        body = ("Fixed in PR #826, see **#5** and #topic.\n"
+                "A #[[multi word]] tag, a ((" + UUID + ")) ref, {{embed [[x]]}} here,\n"
+                "and ![[x]] inline.\n"
+                "status:: draft\n"
+                "- owner:: someone\n")
+        found = graph.syntax_violations(body)
+        self.assertEqual([(ln, kind) for ln, kind, _ in found], [
+            (1, "hash-tag"), (1, "hash-tag"), (1, "hash-tag"),
+            (2, "hash-tag"), (2, "block ref"), (2, "embed"),
+            (3, "transclusion"), (4, "property"), (5, "property")])
+        self.assertEqual([tok for _, _, tok in found][:4], ["#826", "#5", "#topic", "#[[multi word]]"])
+
+    def test_lookalikes_are_not_flagged(self):
+        body = ("---\ntitle: \"#notes in C#\"\ntags: [a]\n---\n\n"
+                "# Heading\n\n## Sub\n\n"
+                "A [[note#section]], a [[#local]], a [link](#anchor) and https://ex.com/a#frag.\n"
+                "An em dash &#8212; in C# or F#, std::vector and a::b mid-line.\n"
+                "Code `#826` and ``{{x}}`` stay code.\n"
+                "```\n#tag inside a fence\nkey:: value\n{{macro}}\n```\n"
+                "~~~bash\n# comment\n~~~\n")
+        self.assertEqual(graph.syntax_violations(body), [])
+
+    def test_line_numbers_are_file_lines(self):
+        body = "---\ntitle: T\n---\n\nclean\n\nissue #9\n"
+        self.assertEqual(graph.syntax_violations(body), [(7, "hash-tag", "#9")])
+
+    def test_slash_is_kept_only_inside_a_namespaced_tag(self):
+        toks = [t for _, _, t in graph.syntax_violations("ranks #27/#33 and #area/sub\n")]
+        self.assertEqual(toks, ["#27", "#area/sub"])
+
+
+class CheckSyntax(TempRepo):
+    def test_pages_and_journals_reported_sources_skipped_exit_unchanged(self):
+        _note(self.root, "pages/a.md", "A", "Links [[b]], cites PR #826.")
+        _note(self.root, "pages/b.md", "B", "Back to [[a]].")
+        _note(self.root, "journals/2026-01-01.md", "J", "Touched [[a]] #wip")
+        _note(self.root, "sources/2026-01-01-cap.md", "Cap", "Verbatim: see #999, for [[a]].")
+        rc, out = _run(graph.cmd_check, self.root)
+        self.assertEqual(rc, 0, "rule 3 is advisory: exit still means links + stems")
+        self.assertIn("SYNTAX pages/a.md:12 hash-tag #826", out)
+        self.assertIn("SYNTAX journals/2026-01-01.md:12 hash-tag #wip", out)
+        self.assertNotIn("#999", out, "captures are verbatim and immutable, not scanned")
+        self.assertIn("2 use(s) of syntax AGENTS rule 3 bans", out)
+
+    def test_clean_repo_prints_no_syntax_section(self):
+        _note(self.root, "pages/a.md", "A", "See [[b]], issue 826.")
+        _note(self.root, "pages/b.md", "B", "[[a]]")
+        rc, out = _run(graph.cmd_check, self.root)
+        self.assertEqual(rc, 0)
+        self.assertNotIn("SYNTAX", out)
+        self.assertNotIn("rule 3", out)
 
 
 if __name__ == "__main__":

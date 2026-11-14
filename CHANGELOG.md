@@ -14,6 +14,25 @@ in its own journal.
 
 Newest first.
 
+## 2026-11-14
+
+- **`check` lists the syntax AGENTS rule 3 bans.** The rule banned block refs, embeds,
+  `key:: value` properties, transclusion and inline hash-tags, yet nothing looked for them, and
+  AGENTS rule 7 said outright that `check` "is silent on every rule here". An instance found 60
+  bare `#<number>` uses across its pages and journals (issue and PR numbers, a few ranks), written
+  by agents that had read the rule; Logseq turns each into a page. `check` now prints a `SYNTAX path:line kind
+  token` line for every banned form in `pages/` and `journals/`, after stripping frontmatter,
+  fenced and inline code, URLs, markdown link targets and wikilinks, so headings, `page#anchor`,
+  `[[#heading]]`, `&#8212;` and `C#` stay clean. Tested against every capture and root document
+  in the template and that instance: the only matches were real `#<number>` uses.
+  It is **advisory**: the exit code still means broken links and duplicate stems. Captures in
+  `sources/` are not scanned, being verbatim and immutable (rule 8), so a quoted `#1` there is
+  not a fault. Rule 3 gains the bare-number case and its replacement (`issue 826`, `No. 1`), and
+  rule 7's sentence now names the one rule `check` does read. Making it a failure, and an
+  automatic fix, were weighed and deferred to [ROADMAP.md](ROADMAP.md) with the gate that
+  re-opens them. Six unit tests in `tools/tests/test_graph.py`. On pull, an instance's `check`
+  may start listing old uses; they are its own content to reword, at its own pace.
+
 ## 2026-11-10
 
 - **The ladder's T0 roster gains a social-platforms row.** X and Reddit closed most logged-out

@@ -5,7 +5,7 @@ Backlinks are never stored in notes; they are DERIVED from forward [[wikilinks]]
 by this script (or plain grep). Conventions: AGENTS.md. Core tooling: stdlib only (AGENTS `tools/` row).
 
 Usage:
-  python3 tools/graph.py check                # lint links, write _generated/links.json
+  python3 tools/graph.py check                # lint links (+ rule 3 syntax, advisory), write _generated/links.json
   python3 tools/graph.py backlinks <stem>     # who links to <stem>, with context lines
   python3 tools/graph.py rename <old> <new>   # rename a note + rewrite all references
   python3 tools/graph.py migrate              # in an instance, after a pull: repoint your links to stems the template renamed
@@ -121,6 +121,53 @@ def cmd_domains(root: Path, domain=None) -> int:
     return 0
 
 
+SYNTAX_DIRS = ("pages/", "journals/")  # authored layers; sources/ are verbatim captures, immutable (rule 8)
+FENCE_RE = re.compile(r"^\s*(```|~~~)")
+INLINE_CODE_RE = re.compile(r"(`+)(?:(?!\1).)+?\1")
+LINK_DEST_RE = re.compile(r"\]\([^)\s]*(?:\s+\"[^\"]*\")?\)")  # markdown link targets, e.g. ](#anchor)
+URL_RE = re.compile(r"<?https?://[^\s>]+>?")
+BRACKETED_RE = re.compile(r"\[\[[^\]\n]*\]\]")  # any [[…]] span, incl. [[#heading]] that WIKILINK skips
+BANNED = (  # AGENTS rule 3, in the order a line is scanned
+    ("transclusion", re.compile(r"!\[\[[^\]\n]*\]\]")),
+    ("hash-tag", re.compile(r"(?:^|(?<=[\s(\[{|,;:\"'*_~>]))#\[\[[^\]\n]*\]\]")),
+    ("block ref", re.compile(r"\(\([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\)\)")),
+    ("embed", re.compile(r"\{\{[^{}\n]+\}\}")),
+    ("property", re.compile(r"^\s*(?:[-*]\s+)?[A-Za-z][\w-]*::(?=\s|$)")),
+)
+BARE_TAG_RE = re.compile(r"(?:^|(?<=[\s(\[{|,;:\"'*_~>]))#\w(?:[\w-]|/(?=\w))*")
+
+
+def syntax_violations(text: str) -> list:
+    """Rule 3's banned viewer-specific syntax in a note body: [(line, kind, token)].
+    Frontmatter, fenced code, inline code, URLs and markdown link targets are skipped,
+    so `# heading`, `page#anchor`, `[x](#anchor)`, `&#8212;` and `C#` never match; a
+    bare `#826` does, since Logseq reads it as a page."""
+    lines = text.split("\n")
+    start = 0
+    if lines and lines[0].strip() == "---":
+        end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
+        start = end + 1 if end is not None else 0
+    found, fence = [], None
+    for i in range(start, len(lines)):
+        line = lines[i]
+        m = FENCE_RE.match(line)
+        if m:
+            fence = None if fence == m.group(1) else (fence or m.group(1))
+            continue
+        if fence:
+            continue
+        line = INLINE_CODE_RE.sub(" ", line)
+        line = URL_RE.sub(" ", LINK_DEST_RE.sub("] ", line))
+        for kind, rx in BANNED:
+            for t in rx.findall(line):
+                found.append((i + 1, kind, t.strip()))
+            line = rx.sub(" ", line)
+        line = BRACKETED_RE.sub(" ", line)    # [[note#heading]] and [[#heading]] are links, not tags
+        for t in BARE_TAG_RE.findall(line):
+            found.append((i + 1, "hash-tag", t))
+    return found
+
+
 def cmd_check(root: Path) -> int:
     notes, dupes = load(root)
     by_slug = {slugify(s): s for s in notes}
@@ -183,6 +230,14 @@ def cmd_check(root: Path) -> int:
         print(f"  note: {s['in']} writes [[{s['wrote']}]] (resolves to [[{s['actual']}]] — normalize)")
     for o in orphans:
         print(f"  orphan (no links in or out): {notes[o]['path']}")
+    syntax = [(n["path"], ln, kind, tok)    # advisory: rule 3 is a MUST, but exit stays links + stems
+              for n in notes.values() if n["path"].startswith(SYNTAX_DIRS)
+              for ln, kind, tok in syntax_violations(n["text"])]
+    for path, ln, kind, tok in sorted(syntax):
+        print(f"  SYNTAX {path}:{ln} {kind} {tok}")
+    if syntax:
+        print(f"  → {len(syntax)} use(s) of syntax AGENTS rule 3 bans in note bodies; the rule says "
+              "what to write instead. Captures in sources/ are not scanned (verbatim, immutable).")
     print("index: _generated/links.json")
     rc = 1 if (broken or dupes) else 0
     try:                       # advisory ownership guard (rule 7 bracket); never wedges check

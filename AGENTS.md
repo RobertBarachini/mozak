@@ -49,6 +49,10 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    properties, `![[transclusion]]`, and inline hash-tags — both `#[[tags]]` and bare
    `#sometag` (a hash-tag is a page reference in Logseq but a separate tag entity in
    Obsidian: same text, divergent graph semantics; and `graph.py` sees neither).
+   A bare number counts: Logseq reads `#826` as a page, so an issue or PR number is
+   written `issue 826` or `PR 826`, a rank `No. 1`. `check` lists every banned form it
+   finds in `pages/` and `journals/` as an advisory, without failing; captures in
+   `sources/` are verbatim and immutable, so they are not scanned.
    Facets live in frontmatter `tags:` only — see the schema's tag-vs-page rule;
    query with `python3 tools/graph.py tags [tag]`.
 4. **Every link states why.** A wikilink appears inside a sentence expressing the
@@ -96,8 +100,9 @@ user-visible yet is never shipped or overwritten by upstream (SYNC).
    config such as `.gitignore`) → a [CHANGELOG.md](CHANGELOG.md) entry, which is
    template-owned (the template authors it; instances only read it).
    **Then re-read this file — before drafting the commit, and before writing any
-   handoff.** `check` is mechanical: it proves links resolve and stems are unique, and it
-   is silent on every rule here. A long session is exactly where that gap opens. The
+   handoff.** `check` is mechanical: it proves links resolve and stems are unique, lists
+   rule 3's banned syntax, and is silent on every other rule here. A long session is
+   exactly where that gap opens. The
    constitution is loaded once at the start and then competes with a session's worth of
    working context, so by the close the rules are being *recalled* rather than *read* —
    and a rule recalled is a rule paraphrased. Re-read the MUST rules against what the

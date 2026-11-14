@@ -30,6 +30,7 @@ this file.
 | **`protego` for RFC 9309** | the hand-rolled parser exists because the core is stdlib; `protego` replaces it 1:1 and adds `Request-rate`/`Visit-time` | a robots.txt the hand-rolled parser misreads | 2026-09-09 |
 | **`tools/_env.py`** — share `is_headless_remote()` between `annotate.py` and a browser tool | headless renders need no display, so no second consumer appeared | a second tool must decide whether a human's browser can be opened | 2026-09-14 |
 | **Web Bot Auth** — RFC 9421 signed-agent identity | it identifies a *server-side* agent; a local user-directed tool has nothing to sign for | anything in this system runs server-side | 2026-09-09 |
+| **Rule 3 syntax as a `check` failure**, and a `--fix` for it | an instance pulling the guard carries an unknown backlog (one instance's first sweep rewrote 60 uses, in two passes), so failing would block its definition of done at the pull; and a fix needs context, since `#826` becomes `issue 826`, `PR 826` or `No. 826` by what the number is, which a regex cannot tell | the advisory has read zero in the template and its instances through a tagged release, making the failure free to adopt | 2026-11-14 |
 
 ## Rejected — not to be re-proposed
 
