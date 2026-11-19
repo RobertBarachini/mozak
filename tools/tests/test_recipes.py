@@ -1025,6 +1025,76 @@ def warn_all(yt):
     return yt.runtime_warnings(None) + yt.runtime_warnings(([], ["node-18.19.1 (unsupported)"], False))
 
 
+# ------------------------------------------------------------ qr
+
+class Qr(unittest.TestCase):
+    """qr's pure helpers under bare python3 (segno is imported only to encode)."""
+
+    def setUp(self):
+        self.q = load(RECIPES / "qr.py")
+
+    def test_secrets_are_recognised(self):
+        for text in ("-----BEGIN OPENSSH PRIVATE KEY-----\nb3Bl\n-----END OPENSSH PRIVATE KEY-----",
+                     "-----BEGIN PGP PRIVATE KEY BLOCK-----",
+                     "[Interface]\nPrivateKey = aGVsbG8=\nAddress = 10.0.0.2/32",
+                     "[Peer]\nPresharedKey=aGVsbG8=",
+                     "otpauth://totp/Example:me?secret=JBSWY3DPEHPK3PXP",
+                     "WIFI:T:WPA;S:home;P:hunter2;;",
+                     "WIFI:P:hunter2;S:home;;"):
+            with self.subTest(text=text[:32]):
+                self.assertIsNotNone(self.q.secret_kind(text))
+
+    def test_public_material_passes(self):
+        for text in ("https://example.com/releases",
+                     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample phone",
+                     "-----BEGIN PUBLIC KEY-----",
+                     "[Peer]\nPublicKey = aGVsbG8=\nEndpoint = vpn.example.com:51820",
+                     "WIFI:T:nopass;S:guest;;"):
+            with self.subTest(text=text[:32]):
+                self.assertIsNone(self.q.secret_kind(text))
+
+    def test_compact_uses_fixed_colours_and_no_glyph_on_a_matching_background(self):
+        rows = [[True, False, True], [False, False, True], [True, True, False]]
+        out = self.q.render(rows, "compact")
+        codes = set(re.findall(r"\x1b\[([0-9;]*)m", out))
+        self.assertLessEqual(codes, {"0", "38;5;16", "38;5;231", "48;5;16", "48;5;231"},
+                             "only the palette's pure black and white, never theme colours")
+        plain = re.sub(r"\x1b\[[0-9;]*m", "", out).split("\n")
+        # Three rows pack into two lines, the last padded with a light half-row; stacked
+        # modules of one colour are a space, so no foreground can match its background.
+        self.assertEqual(plain, ["▀  ", "▀▀ "])
+
+    def test_wide_draws_two_columns_per_module(self):
+        out = self.q.render([[True, False], [False, True]], "wide")
+        plain = re.sub(r"\x1b\[[0-9;]*m", "", out).split("\n")
+        self.assertEqual(plain, ["    ", "    "])
+        self.assertTrue(all(l.endswith("\x1b[0m") for l in out.split("\n")), "each line resets")
+
+    def test_style_prefers_wide_then_compact(self):
+        self.assertEqual(self.q.choose_style(41, 41, cols=120, lines=50), ("wide", True))
+        self.assertEqual(self.q.choose_style(41, 41, cols=80, lines=50), ("compact", True))
+        self.assertEqual(self.q.choose_style(41, 41, cols=80, lines=24), ("compact", True))
+        self.assertEqual(self.q.choose_style(97, 97, cols=80, lines=24), ("compact", False))
+
+    def test_density_warning_is_for_the_terminal_only(self):
+        """An image scanned off a screen at version 40; a terminal cell is coarser."""
+        self.assertFalse(self.q.too_dense(40, image=True))
+        self.assertFalse(self.q.too_dense(self.q.DENSE_VERSION, image=False))
+        self.assertTrue(self.q.too_dense(self.q.DENSE_VERSION + 1, image=False))
+
+    def test_out_refuses_a_secret_before_anything_is_written(self):
+        """The refusal runs before segno is imported, so it holds even where segno is absent."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d) / "wg.png"
+            r = subprocess.run([sys.executable, str(RECIPES / "qr.py"), "-", "--out", str(target)],
+                               input="[Interface]\nPrivateKey = aGVsbG8=\n",
+                               capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, 2, r.stderr)
+            self.assertIn("--allow-secret", r.stderr)
+            self.assertFalse(target.exists())
+
+
 # ------------------------------------------------------------ graph.py ownership parser
 
 class OwnershipParser(unittest.TestCase):

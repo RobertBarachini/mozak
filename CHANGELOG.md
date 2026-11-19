@@ -14,6 +14,34 @@ in its own journal.
 
 Newest first.
 
+## 2026-11-19
+
+- **A `qr` recipe hands short text to a device that shares nothing with this one.** A phone, a
+  phone profile kept isolated, or a fresh install may have no clipboard, sync or network path to
+  the computer, but its camera works. An instance built QR codes by hand twice within a month,
+  once for a phone's VPN config and once for a download link, which is the rule of two in
+  [tools/recipes/README.md](tools/recipes/README.md). `tools/recipes/qr.py` takes text as an
+  argument or on stdin and draws the code in the terminal by default, writing nothing.
+  `--out file.png` (or `.svg`) writes an image instead, for an agent, whose shell output seldom
+  reaches the person; when stdout is not a terminal, the recipe says so. It handles four traps:
+  - **A secret is refused as an image.** Text that looks like a private key, a WireGuard key
+    line, a one-time-password seed or a Wi-Fi password exits 2 with `--out` unless
+    `--allow-secret` is given, since a file outlives the scan. The check runs before anything is
+    imported, so it holds without segno.
+  - **It never emits a Micro QR,** which segno's `make()` picks for short input and many phone
+    scanners cannot read.
+  - **The terminal drawing is fixed black and white,** from the 256-colour palette. segno's own
+    terminal writer uses the terminal's background colour for dark modules, so on a light theme
+    its code comes out inverted.
+  - **It warns about density only in the terminal.** Images at 10 px per module scanned off a
+    laptop screen with a phone camera at every size up to version 40, the QR maximum (about
+    2.3 KB), so `--out` never warns. The terminal draws a module in one or two character cells,
+    so there it still warns past version 25 (about 1 KB), a threshold no scan has tested yet.
+
+  The PNG and both terminal drawings were decoded with an independent reader (zxing-cpp), and
+  each gave back the input exactly. Seven tests in `tools/tests/test_recipes.py` run under bare
+  `python3`; segno is imported only to encode.
+
 ## 2026-11-14
 
 - **The README and fresh-clone tests skip in an instance.** `test_readme_handoff` and two parts
